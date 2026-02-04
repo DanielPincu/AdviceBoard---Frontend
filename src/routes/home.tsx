@@ -18,6 +18,20 @@ function isPopulatedUser(v: unknown): v is PopulatedUser {
   )
 }
 
+function getUsername(v: unknown, anonymous?: boolean): string {
+  if (anonymous) return 'Anonymous'
+  if (isPopulatedUser(v)) return v.username
+  if (typeof v === 'string' && v) return `User ${v}`
+  return 'User'
+}
+
+function isOwner(v: unknown, myUserId: string | null): boolean {
+  if (!myUserId) return false
+  if (isPopulatedUser(v)) return v._id === myUserId
+  if (typeof v === 'string') return v === myUserId
+  return false
+}
+
 
 export default function Home() {
   
@@ -207,13 +221,7 @@ export default function Home() {
               </p>
 
               <div className="mt-3 text-sm text-gray-500">
-                {advice.anonymous
-                  ? 'Posted anonymously'
-                  : isPopulatedUser(advice._createdBy)
-                  ? `Posted by ${advice._createdBy.username}`
-                  : advice._createdBy
-                  ? `Posted by ${advice._createdBy}`
-                  : 'Posted by unknown'}
+                {advice.anonymous ? 'Posted anonymously' : `Posted by ${getUsername(advice._createdBy)}`}
               </div>
 
               <div className="text-xs text-gray-400 mt-1">
@@ -224,25 +232,18 @@ export default function Home() {
                 <div className="mt-4 border-t pt-3">
                   <h3 className="text-sm font-semibold mb-2">Replies</h3>
                   <ul className="space-y-2">
-                    {advice.replies.map((reply) => (
-                      <li key={reply._id} className="text-sm text-gray-700 bg-gray-50 p-2 rounded flex items-start justify-between gap-2">
+                    {advice.replies.map((replyItem) => (
+                      <li key={replyItem._id} className="text-sm text-gray-700 bg-gray-50 p-2 rounded flex items-start justify-between gap-2">
                         <div>
-                          <p>{reply.content}</p>
+                          <p>{replyItem.content}</p>
                           <div className="mt-1 text-xs text-gray-500">
-                            {reply.anonymous
-                              ? 'Anonymous'
-                              : isPopulatedUser(reply._createdBy)
-                              ? reply._createdBy.username
-                              : reply._createdBy
-                              ? `User ${reply._createdBy}`
-                              : 'User'}
-                            {' · '}
-                            {new Date(reply.createdAt).toLocaleString()}
+                            {getUsername(replyItem._createdBy, replyItem.anonymous)} {' · '}
+                            {new Date(replyItem.createdAt).toLocaleString()}
                           </div>
                         </div>
-                        {isPopulatedUser(reply._createdBy) && reply._createdBy._id === myUserId && (
+                        {isOwner(replyItem._createdBy, myUserId) && (
                           <button
-                            onClick={() => handleDeleteReply(advice._id, reply._id)}
+                            onClick={() => handleDeleteReply(advice._id, replyItem._id)}
                             className="text-xs text-red-600 hover:text-red-800"
                           >
                             Delete reply
@@ -286,7 +287,7 @@ export default function Home() {
               </div>
 
               {(() => {
-                const isMine = isPopulatedUser(advice._createdBy) && advice._createdBy._id === myUserId
+                const isMine = isOwner(advice._createdBy, myUserId)
 
                 return (
                   <div className="mt-3 flex gap-3">
