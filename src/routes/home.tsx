@@ -6,6 +6,18 @@ import axios from 'axios'
 
 type ApiErrorBody = { message?: string }
 
+type PopulatedUser = { _id: string; username: string }
+
+function isPopulatedUser(v: unknown): v is PopulatedUser {
+  return (
+    typeof v === 'object' &&
+    v !== null &&
+    '_id' in v &&
+    typeof (v as Record<string, unknown>)._id === 'string' &&
+    'username' in v
+  )
+}
+
 
 export default function Home() {
   
@@ -23,9 +35,31 @@ export default function Home() {
   const isAuthenticated = Boolean(localStorage.getItem('token'))
   const [editingId, setEditingId] = useState<string | null>(null)
   
+  function getUserIdFromToken(): string | null {
+    const token = localStorage.getItem('token')
+    if (!token) return null
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1])) as { id?: string }
+      return payload?.id ?? null
+    } catch {
+      return null
+    }
+  }
+
+  const myUserId = getUserIdFromToken()
+
   async function handleDelete(_id: string) {
-    await deleteAdviceById(_id)
-    setAdvices(prev => prev.filter(a => a._id !== _id))
+    try {
+      await deleteAdviceById(_id)
+      setAdvices(prev => prev.filter(a => a._id !== _id))
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err) && err.response?.status === 403) {
+        alert('You can only delete your own posts.')
+        return
+      }
+      alert('Failed to delete post.')
+      console.error(err)
+    }
   }
 
   async function handleCreate() {
@@ -118,12 +152,21 @@ export default function Home() {
   }
 
   async function handleDeleteReply(adviceId: string, replyId: string) {
-    await deleteReply(adviceId, replyId)
-    setAdvices(prev => prev.map(a =>
-      a._id === adviceId
-        ? { ...a, replies: a.replies.filter(r => r._id !== replyId) }
-        : a
-    ))
+    try {
+      await deleteReply(adviceId, replyId)
+      setAdvices(prev => prev.map(a =>
+        a._id === adviceId
+          ? { ...a, replies: a.replies.filter(r => r._id !== replyId) }
+          : a
+      ))
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err) && err.response?.status === 403) {
+        alert('You can only delete your own replies.')
+        return
+      }
+      alert('Failed to delete reply.')
+      console.error(err)
+    }
   }
   
   useEffect(() => {
@@ -166,8 +209,8 @@ export default function Home() {
               <div className="mt-3 text-sm text-gray-500">
                 {advice.anonymous
                   ? 'Posted anonymously'
-                  : advice._createdBy && typeof advice._createdBy === 'object' && advice._createdBy !== null && 'username' in advice._createdBy
-                  ? `Posted by ${(advice._createdBy as { username: string }).username}`
+                  : isPopulatedUser(advice._createdBy)
+                  ? `Posted by ${advice._createdBy.username}`
                   : advice._createdBy
                   ? `Posted by ${advice._createdBy}`
                   : 'Posted by unknown'}
@@ -188,8 +231,8 @@ export default function Home() {
                           <div className="mt-1 text-xs text-gray-500">
                             {reply.anonymous
                               ? 'Anonymous'
-                              : reply._createdBy && typeof reply._createdBy === 'object' && reply._createdBy !== null && 'username' in reply._createdBy
-                              ? (reply._createdBy as { username: string }).username
+                              : isPopulatedUser(reply._createdBy)
+                              ? reply._createdBy.username
                               : reply._createdBy
                               ? `User ${reply._createdBy}`
                               : 'User'}
@@ -197,12 +240,14 @@ export default function Home() {
                             {new Date(reply.createdAt).toLocaleString()}
                           </div>
                         </div>
-                        <button
-                          onClick={() => handleDeleteReply(advice._id, reply._id)}
-                          className="text-xs text-red-600 hover:text-red-800"
-                        >
-                          Delete reply
-                        </button>
+                        {isPopulatedUser(reply._createdBy) && reply._createdBy._id === myUserId && (
+                          <button
+                            onClick={() => handleDeleteReply(advice._id, reply._id)}
+                            className="text-xs text-red-600 hover:text-red-800"
+                          >
+                            Delete reply
+                          </button>
+                        )}
                       </li>
                     ))}
                   </ul>
@@ -240,26 +285,34 @@ export default function Home() {
                 )}
               </div>
 
-              <div className="mt-3 flex gap-3">
-                <button
-                  onClick={() => {
-                    setEditingId(advice._id)
-                    setForm({ title: advice.title, content: advice.content, anonymous: advice.anonymous })
-                    setIsModalOpen(true)
-                  }}
-                  disabled={!isAuthenticated}
-                  className="text-sm text-blue-600 hover:text-blue-800 disabled:opacity-50"
-                >
-                  Edit advice
-                </button>
-                <button
-                  onClick={() => handleDelete(advice._id)}
-                  disabled={!isAuthenticated}
-                  className="text-sm text-red-600 hover:text-red-800 disabled:opacity-50"
-                >
-                  Delete advice
-                </button>
-              </div>
+              {(() => {
+                const isMine = isPopulatedUser(advice._createdBy) && advice._createdBy._id === myUserId
+
+                return (
+                  <div className="mt-3 flex gap-3">
+                    {isMine && (
+                      <button
+                        onClick={() => {
+                          setEditingId(advice._id)
+                          setForm({ title: advice.title, content: advice.content, anonymous: advice.anonymous })
+                          setIsModalOpen(true)
+                        }}
+                        className="text-sm text-blue-600 hover:text-blue-800"
+                      >
+                        Edit advice
+                      </button>
+                    )}
+                    {isMine && (
+                      <button
+                        onClick={() => handleDelete(advice._id)}
+                        className="text-sm text-red-600 hover:text-red-800"
+                      >
+                        Delete advice
+                      </button>
+                    )}
+                  </div>
+                )
+              })()}
             </div>
           ))}
         </div>
