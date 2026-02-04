@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
 import type { Advice } from '../interfaces/interface.advice'
-import { fetchAllAdvices, deleteAdviceById, createAdvice, addReply, deleteReply } from '../modules/module.advice'
+import { fetchAllAdvices, deleteAdviceById, createAdvice, addReply, deleteReply, updateAdviceById } from '../modules/module.advice'
 import Nav from '../components/nav'
+import axios from 'axios'
+
+type ApiErrorBody = { message?: string }
 
 
 export default function Home() {
@@ -14,6 +17,11 @@ export default function Home() {
     anonymous: false,
   })
   const [reply, setReply] = useState<Record<string, string>>({})
+  const [replyAnonymous, setReplyAnonymous] = useState<Record<string, boolean>>({})
+  const [createError, setCreateError] = useState<string | null>(null)
+  const [replyError, setReplyError] = useState<Record<string, string | null>>({})
+  const isAuthenticated = Boolean(localStorage.getItem('token'))
+  const [editingId, setEditingId] = useState<string | null>(null)
   
   async function handleDelete(_id: string) {
     await deleteAdviceById(_id)
@@ -21,26 +29,92 @@ export default function Home() {
   }
 
   async function handleCreate() {
+    setCreateError(null)
+
+    const title = form.title.trim()
+    const content = form.content.trim()
+
+    if (title.length < 3) {
+      setCreateError('Title must be at least 3 characters')
+      return
+    }
+
+    if (content.length < 3) {
+      setCreateError('Content must be at least 3 characters')
+      return
+    }
+
     try {
       console.log('Creating advice with payload:', form)
-      const created = await createAdvice(form)
+      const created = await createAdvice({ ...form, title, content })
       console.log('Created advice:', created)
       setAdvices(prev => [created, ...prev])
       setIsModalOpen(false)
       setForm({ title: '', content: '', anonymous: false })
-    } catch (err) {
+      setCreateError(null)
+    } catch (err: unknown) {
       console.error('Create advice failed:', err)
-      alert('Failed to create advice. Check console / network tab.')
+      const msg = axios.isAxiosError(err)
+        ? (err.response?.data as ApiErrorBody | undefined)?.message
+        : undefined
+      setCreateError(msg || 'Failed to create advice. Check your input.')
+    }
+  }
+
+  async function handleUpdate() {
+    if (!editingId) return
+
+    setCreateError(null)
+    const title = form.title.trim()
+    const content = form.content.trim()
+
+    if (title.length < 3) {
+      setCreateError('Title must be at least 3 characters')
+      return
+    }
+
+    if (content.length < 3) {
+      setCreateError('Content must be at least 3 characters')
+      return
+    }
+
+    try {
+      const updated = await updateAdviceById(editingId, { title, content, anonymous: form.anonymous })
+      setAdvices(prev => prev.map(a => (a._id === editingId ? updated : a)))
+      setIsModalOpen(false)
+      setEditingId(null)
+      setForm({ title: '', content: '', anonymous: false })
+      setCreateError(null)
+    } catch (err: unknown) {
+      console.error('Update advice failed:', err)
+      const msg = axios.isAxiosError(err)
+        ? (err.response?.data as ApiErrorBody | undefined)?.message
+        : undefined
+      setCreateError(msg || 'Failed to update advice. Check your input.')
     }
   }
 
   async function handleAddReply(adviceId: string) {
     const content = reply[adviceId]?.trim()
-    if (!content) return
+    if (!content || content.length < 3) {
+      setReplyError(prev => ({ ...prev, [adviceId]: 'Reply must be at least 3 characters' }))
+      return
+    }
 
-    const updated = await addReply(adviceId, { content, anonymous: true })
-    setAdvices(prev => prev.map(a => (a._id === adviceId ? updated : a)))
-    setReply(prev => ({ ...prev, [adviceId]: '' }))
+    try {
+      const anonymous = !!replyAnonymous[adviceId]
+      const updated = await addReply(adviceId, { content, anonymous })
+      setAdvices(prev => prev.map(a => (a._id === adviceId ? updated : a)))
+      setReply(prev => ({ ...prev, [adviceId]: '' }))
+      setReplyAnonymous(prev => ({ ...prev, [adviceId]: false }))
+      setReplyError(prev => ({ ...prev, [adviceId]: null }))
+    } catch (err: unknown) {
+      console.error('Add reply failed:', err)
+      const msg = axios.isAxiosError(err)
+        ? (err.response?.data as ApiErrorBody | undefined)?.message
+        : undefined
+      setReplyError(prev => ({ ...prev, [adviceId]: msg || 'Failed to add reply' }))
+    }
   }
 
   async function handleDeleteReply(adviceId: string, replyId: string) {
@@ -68,7 +142,8 @@ export default function Home() {
       
       <button
         onClick={() => setIsModalOpen(true)}
-        className="mb-4 px-4 py-2 bg-green-600 text-white rounded"
+        disabled={!isAuthenticated}
+        className="mb-4 px-4 py-2 bg-green-600 text-white rounded disabled:opacity-50"
       >
         Create Advice
       </button>
@@ -89,7 +164,13 @@ export default function Home() {
               </p>
 
               <div className="mt-3 text-sm text-gray-500">
-                {advice.anonymous ? 'Posted anonymously' : `Posted by ${advice._createdBy}`}
+                {advice.anonymous
+                  ? 'Posted anonymously'
+                  : advice._createdBy && typeof advice._createdBy === 'object' && advice._createdBy !== null && 'username' in advice._createdBy
+                  ? `Posted by ${(advice._createdBy as { username: string }).username}`
+                  : advice._createdBy
+                  ? `Posted by ${advice._createdBy}`
+                  : 'Posted by unknown'}
               </div>
 
               <div className="text-xs text-gray-400 mt-1">
@@ -105,7 +186,13 @@ export default function Home() {
                         <div>
                           <p>{reply.content}</p>
                           <div className="mt-1 text-xs text-gray-500">
-                            {reply.anonymous ? 'Anonymous' : reply._createdBy ? `User ${reply._createdBy}` : 'User'}
+                            {reply.anonymous
+                              ? 'Anonymous'
+                              : reply._createdBy && typeof reply._createdBy === 'object' && reply._createdBy !== null && 'username' in reply._createdBy
+                              ? (reply._createdBy as { username: string }).username
+                              : reply._createdBy
+                              ? `User ${reply._createdBy}`
+                              : 'User'}
                             {' · '}
                             {new Date(reply.createdAt).toLocaleString()}
                           </div>
@@ -122,27 +209,57 @@ export default function Home() {
                 </div>
               )}
 
-              <div className="mt-3 flex gap-2">
-                <input
-                  className="flex-1 border rounded px-2 py-1 text-sm"
-                  placeholder="Write a reply..."
-                  value={reply[advice._id] || ''}
-                  onChange={e => setReply(prev => ({ ...prev, [advice._id]: e.target.value }))}
-                />
-                <button
-                  onClick={() => handleAddReply(advice._id)}
-                  className="text-sm px-3 py-1 rounded bg-gray-900 text-white hover:bg-black"
-                >
-                  Reply
-                </button>
+              <div className="mt-3">
+                <div className="flex gap-2">
+                  <input
+                    className="flex-1 border rounded px-2 py-1 text-sm"
+                    placeholder={isAuthenticated ? 'Write a reply...' : 'Login to reply'}
+                    value={reply[advice._id] || ''}
+                    onChange={e => setReply(prev => ({ ...prev, [advice._id]: e.target.value }))}
+                    disabled={!isAuthenticated}
+                  />
+                  <button
+                    onClick={() => handleAddReply(advice._id)}
+                    disabled={!isAuthenticated}
+                    className="text-sm px-3 py-1 rounded bg-gray-900 text-white hover:bg-black disabled:opacity-50"
+                  >
+                    Reply
+                  </button>
+                </div>
+                <label className="mt-2 flex items-center gap-2 text-xs text-gray-600">
+                  <input
+                    type="checkbox"
+                    checked={!!replyAnonymous[advice._id]}
+                    onChange={e => setReplyAnonymous(prev => ({ ...prev, [advice._id]: e.target.checked }))}
+                    disabled={!isAuthenticated}
+                  />
+                  Reply anonymously
+                </label>
+                {replyError[advice._id] && (
+                  <p className="mt-1 text-xs text-red-600">{replyError[advice._id]}</p>
+                )}
               </div>
 
-              <button
-                onClick={() => handleDelete(advice._id)}
-                className="mt-3 text-sm text-red-600 hover:text-red-800"
-              >
-                Delete advice
-              </button>
+              <div className="mt-3 flex gap-3">
+                <button
+                  onClick={() => {
+                    setEditingId(advice._id)
+                    setForm({ title: advice.title, content: advice.content, anonymous: advice.anonymous })
+                    setIsModalOpen(true)
+                  }}
+                  disabled={!isAuthenticated}
+                  className="text-sm text-blue-600 hover:text-blue-800 disabled:opacity-50"
+                >
+                  Edit advice
+                </button>
+                <button
+                  onClick={() => handleDelete(advice._id)}
+                  disabled={!isAuthenticated}
+                  className="text-sm text-red-600 hover:text-red-800 disabled:opacity-50"
+                >
+                  Delete advice
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -151,7 +268,7 @@ export default function Home() {
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg w-full max-w-md">
-            <h2 className="text-lg font-semibold mb-4">Create Advice</h2>
+            <h2 className="text-lg font-semibold mb-4">{editingId ? 'Edit Advice' : 'Create Advice'}</h2>
 
             <input
               className="w-full border p-2 mb-3"
@@ -176,18 +293,27 @@ export default function Home() {
               Post anonymously
             </label>
 
+            {createError && (
+              <p className="mb-3 text-sm text-red-600">{createError}</p>
+            )}
+
             <div className="flex justify-end gap-2">
               <button
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => {
+                  setIsModalOpen(false)
+                  setEditingId(null)
+                  setForm({ title: '', content: '', anonymous: false })
+                  setCreateError(null)
+                }}
                 className="px-3 py-1 border rounded"
               >
                 Cancel
               </button>
               <button
-                onClick={handleCreate}
+                onClick={editingId ? handleUpdate : handleCreate}
                 className="px-3 py-1 bg-blue-600 text-white rounded"
               >
-                Create
+                {editingId ? 'Save changes' : 'Create'}
               </button>
             </div>
           </div>

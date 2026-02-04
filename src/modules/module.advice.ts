@@ -24,18 +24,15 @@ export async function deleteAdviceById(id: string): Promise<void> {
 }
 
 export async function createAdvice(
-    payload: Pick<Advice, 'title' | 'content' | 'anonymous'>
+  payload: Pick<Advice, 'title' | 'content' | 'anonymous'>
 ): Promise<Advice> {
-    const { data } = await api.post<Advice>('/advices', {
-        ...payload,
-        _createdBy: '64f9c2a4b1e3a2c9d8f12345',
-    })
-    return data
+  const { data } = await api.post<Advice>('/advices', payload)
+  return data
 }
 
 export async function addReply(
   adviceId: string,
-  payload: { content: string; anonymous: boolean; _createdBy?: string }
+  payload: { content: string; anonymous: boolean }
 ): Promise<Advice> {
   const { data } = await api.post<Advice>(`/advices/${adviceId}/replies`, payload)
   return data
