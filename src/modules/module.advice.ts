@@ -1,7 +1,7 @@
 import axios from 'axios'
 import type { Advice } from '../interfaces/interface.advice'
 
-const API_ROOT = 'http://localhost:4000/api'
+const API_ROOT = 'https://adviceboard-backend.onrender.com/api/'
 
 const api = axios.create({
     baseURL: API_ROOT,
@@ -16,7 +16,7 @@ export async function fetchAllAdvices(): Promise<Advice[]> {
 }
 
 export async function fetchAdviceById(id: string): Promise<Advice> {
-    const { data } = await api.get<Advice>(`/advice/${id}`)
+    const { data } = await api.get<Advice>(`/advices/${id}`)
     return data
 }
 
@@ -24,7 +24,7 @@ export async function updateAdviceById(
     id: string,
     payload: Partial<Advice>
 ): Promise<Advice> {
-    const { data } = await api.put<Advice>(`/advice/${id}`, payload)
+    const { data } = await api.put<Advice>(`/advices/${id}`, payload)
     return data
 }
 
@@ -35,7 +35,7 @@ export async function deleteAdviceById(id: string): Promise<void> {
 export async function createAdvice(
     payload: Pick<Advice, 'title' | 'content' | 'anonymous'>
 ): Promise<Advice> {
-    const { data } = await api.post<Advice>('/advice', {
+    const { data } = await api.post<Advice>('/advices', {
         ...payload,
         _createdBy: '64f9c2a4b1e3a2c9d8f12345',
     })
