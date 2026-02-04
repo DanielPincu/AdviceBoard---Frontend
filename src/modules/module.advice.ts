@@ -1,14 +1,5 @@
-import axios from 'axios'
 import type { Advice } from '../interfaces/interface.advice'
-
-const API_ROOT = 'https://adviceboard-backend.onrender.com/api'
-
-const api = axios.create({
-    baseURL: API_ROOT,
-    headers: {
-        'Content-Type': 'application/json',
-    },
-})
+import { api } from './module.interceptor'
 
 export async function fetchAllAdvices(): Promise<Advice[]> {
     const { data } = await api.get<Advice[]>('/advices')

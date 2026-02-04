@@ -3,6 +3,13 @@ import { Link, useLocation } from 'react-router-dom'
 export default function Nav() {
   const location = useLocation()
 
+  const isAuthenticated = Boolean(localStorage.getItem('token'))
+
+  function handleLogout() {
+    localStorage.removeItem('token')
+    window.location.href = '/login'
+  }
+
   const linkClass = (path: string) =>
     `mx-4 hover:underline ${
       location.pathname === path
@@ -20,9 +27,18 @@ export default function Nav() {
         About
       </Link>
 
-      <Link to="/contact" className={linkClass('/contact')}>
-        Contact
-      </Link>
+      {isAuthenticated ? (
+        <button
+          onClick={handleLogout}
+          className="mx-4 hover:underline text-gray-600"
+        >
+          Logout
+        </button>
+      ) : (
+        <Link to="/login" className={linkClass('/login')}>
+          Login
+        </Link>
+      )}
     </nav>
   )
 }
