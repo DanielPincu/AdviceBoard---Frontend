@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { Advice } from '../interfaces/interface.advice'
-import { fetchAllAdvices, deleteAdviceById, createAdvice } from '../modules/module.advice'
+import { fetchAllAdvices, deleteAdviceById, createAdvice, addReply, deleteReply } from '../modules/module.advice'
 import Nav from '../components/nav'
 
 
@@ -13,6 +13,7 @@ export default function Home() {
     content: '',
     anonymous: false,
   })
+  const [reply, setReply] = useState<Record<string, string>>({})
   
   async function handleDelete(_id: string) {
     await deleteAdviceById(_id)
@@ -31,6 +32,24 @@ export default function Home() {
       console.error('Create advice failed:', err)
       alert('Failed to create advice. Check console / network tab.')
     }
+  }
+
+  async function handleAddReply(adviceId: string) {
+    const content = reply[adviceId]?.trim()
+    if (!content) return
+
+    const updated = await addReply(adviceId, { content, anonymous: true })
+    setAdvices(prev => prev.map(a => (a._id === adviceId ? updated : a)))
+    setReply(prev => ({ ...prev, [adviceId]: '' }))
+  }
+
+  async function handleDeleteReply(adviceId: string, replyId: string) {
+    await deleteReply(adviceId, replyId)
+    setAdvices(prev => prev.map(a =>
+      a._id === adviceId
+        ? { ...a, replies: a.replies.filter(r => r._id !== replyId) }
+        : a
+    ))
   }
   
   useEffect(() => {
@@ -76,11 +95,53 @@ export default function Home() {
               <div className="text-xs text-gray-400 mt-1">
                 {new Date(advice.createdAt).toLocaleString()}
               </div>
+
+              {advice.replies && advice.replies.length > 0 && (
+                <div className="mt-4 border-t pt-3">
+                  <h3 className="text-sm font-semibold mb-2">Replies</h3>
+                  <ul className="space-y-2">
+                    {advice.replies.map((reply) => (
+                      <li key={reply._id} className="text-sm text-gray-700 bg-gray-50 p-2 rounded flex items-start justify-between gap-2">
+                        <div>
+                          <p>{reply.content}</p>
+                          <div className="mt-1 text-xs text-gray-500">
+                            {reply.anonymous ? 'Anonymous' : reply._createdBy ? `User ${reply._createdBy}` : 'User'}
+                            {' · '}
+                            {new Date(reply.createdAt).toLocaleString()}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleDeleteReply(advice._id, reply._id)}
+                          className="text-xs text-red-600 hover:text-red-800"
+                        >
+                          Delete reply
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <div className="mt-3 flex gap-2">
+                <input
+                  className="flex-1 border rounded px-2 py-1 text-sm"
+                  placeholder="Write a reply..."
+                  value={reply[advice._id] || ''}
+                  onChange={e => setReply(prev => ({ ...prev, [advice._id]: e.target.value }))}
+                />
+                <button
+                  onClick={() => handleAddReply(advice._id)}
+                  className="text-sm px-3 py-1 rounded bg-gray-900 text-white hover:bg-black"
+                >
+                  Reply
+                </button>
+              </div>
+
               <button
                 onClick={() => handleDelete(advice._id)}
                 className="mt-3 text-sm text-red-600 hover:text-red-800"
               >
-                Delete
+                Delete advice
               </button>
             </div>
           ))}
