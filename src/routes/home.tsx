@@ -247,9 +247,18 @@ export default function Home() {
   }, [])
 
   return (
-    <div className="mx-auto  bg-[#d4d0c8] px-4 py-4 min-h-screen">
+    <div
+      className="mx-auto min-h-screen px-4 py-4"
+      style={{
+        backgroundImage: "url('https://preview.redd.it/w6hb4pwm0fz31.jpg?width=1080&crop=smart&auto=webp&s=5da10aa1e09dd7694e9b1d6bb97e329ec52fdaef')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed'
+      }}
+    >
+      <div className="min-h-screen bg-[#d4d0c8]/ backdrop-blur-[0px] p-2">
      
-      <h1 className="mb-3 rounded-t-md bg-linear-to-r from-[#0a246a] to-[#3a6ea5] px-3 py-2 text-white font-semibold shadow">
+      <h1 className="mb-1 rounded-t-md bg-linear-to-r from-[#0a246a] to-[#3a6ea5] px-3 py-2 text-white font-semibold shadow">
         Advice Board
       </h1>
 
@@ -270,7 +279,7 @@ export default function Home() {
               key={advice._id}
               className="relative overflow-hidden rounded-none border border-t-white border-l-white border-r-[#404040] border-b-[#404040] bg-[#e4e2dc] p-3 shadow"
             >
-              <h2 className="mb-1 rounded-t-sm bg-linear-to-r from-[#0a246a] to-[#3a6ea5] px-2 py-1 text-sm font-semibold text-white">
+              <h2 className="mb-1 rounded-t-sm bg-linear-to-r from-[#0a3cc8] to-[#034d9c] px-2 py-1 text-sm font-semibold text-white">
                 {advice.title}
               </h2>
 
@@ -376,6 +385,7 @@ export default function Home() {
           </div>
         </div>
       )}
+      </div>
     </div>
   )
 }

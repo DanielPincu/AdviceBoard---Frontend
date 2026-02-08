@@ -34,6 +34,10 @@ export default function Login() {
 
   return (
     <div className="mx-auto bg-[#d4d0c8] px-4 py-4 min-h-screen">
+      
+      <h1 className="mb-1 rounded-t-md bg-linear-to-r from-[#0a246a] to-[#3a6ea5] px-3 py-2 text-white font-semibold shadow">
+        Advice Board
+      </h1>
       <Nav />
       <div className="mx-auto mt-10 max-w-md border border-t-white border-l-white border-r-[#404040] border-b-[#404040] bg-[#e4e2dc] p-3 shadow">
         <h1 className="mb-3 rounded-t-sm bg-linear-to-r from-[#0a246a] to-[#3a6ea5] px-3 py-2 text-sm font-semibold text-white shadow">

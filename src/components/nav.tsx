@@ -1,7 +1,7 @@
-import { Link, useLocation } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 
 export default function Nav() {
-  const location = useLocation()
+
 
   const isAuthenticated = Boolean(localStorage.getItem('token'))
 
@@ -23,35 +23,28 @@ export default function Nav() {
 
   const username = getUsernameFromToken()
 
-  const linkClass = (path: string) =>
-    `mx-4 hover:underline ${
-      location.pathname === path
-        ? 'text-red-900 font-semibold'
-        : 'text-gray-600'
-    }`
-
   return (
-    <nav className="flex justify-end items-center mb-6">
-      <Link to="/" className={linkClass('/')}>
+    <nav className="flex justify-end items-center mb-6 bg-linear-to-r from-[#0a246a] to-[#3a6ea5] px-4 py-2 rounded-b-md shadow">
+      <Link to="/" className='text-white hover:underline'>
         Home
       </Link>
 
       {isAuthenticated ? (
         <div className="flex items-center">
           {username && (
-            <span className="mx-2 text-sm text-gray-700">
+            <span className="mx-2 text-sm text-white bg-blue-500 px-2 py-1 rounded">
               Logged in as <strong>{username}</strong>
             </span>
           )}
           <button
             onClick={handleLogout}
-            className="mx-2 hover:underline text-gray-600"
+            className="hover:underline text-white"
           >
             Logout
           </button>
         </div>
       ) : (
-        <Link to="/login" className={linkClass('/login')}>
+        <Link to="/login" className="mx-4 text-white hover:underline">
           Login
         </Link>
       )}
