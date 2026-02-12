@@ -25,6 +25,34 @@ function getUsername(v: unknown, anonymous?: boolean): string {
   return 'User'
 }
 
+type JwtPayload = { id?: string }
+
+function getMyUserId(): string | null {
+  const token = localStorage.getItem('token')
+  if (!token) return null
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1])) as JwtPayload
+    return payload?.id ?? null
+  } catch {
+    return null
+  }
+}
+
+function getOwnerId(v: unknown): string | null {
+  if (!v) return null
+  if (typeof v === 'string') return v
+  if (typeof v === 'object' && v !== null && '_id' in v) {
+    return String((v as { _id: unknown })._id)
+  }
+  return null
+}
+
+function isOwner(createdBy: unknown): boolean {
+  const me = getMyUserId()
+  const ownerId = getOwnerId(createdBy)
+  return Boolean(me && ownerId && me === ownerId)
+}
+
 
 
 export default function Home() {
@@ -70,7 +98,7 @@ export default function Home() {
                         {getUsername(replyItem._createdBy, replyItem.anonymous)} · {new Date(replyItem.createdAt).toLocaleString()}
                       </div>
                     </div>
-                    {isAuthenticated && (
+                    {isAuthenticated && isOwner(replyItem._createdBy) && (
                       <div className="flex gap-2">
                         <button
                           onClick={() => {
@@ -78,13 +106,13 @@ export default function Home() {
                             setReplyEdit(prev => ({ ...prev, [replyItem._id]: replyItem.content }))
                             setReplyEditAnonymous(prev => ({ ...prev, [replyItem._id]: !!replyItem.anonymous }))
                           }}
-                          className="rounded-none border border-t-white border-l-white border-r-[#404040] border-b-[#404040] bg-[#e4e2dc] px-2 py-1 text-xs text-black shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white"
+                          className="rounded-md bg-linear-to-b from-[#eef5ff] to-[#cfe1ff] px-3 py-1.5 text-xs text-[#0b3d91] shadow ring-1 ring-white/50 hover:from-white hover:to-[#dbe9ff] active:translate-y-px"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => handleDeleteReply(advice._id, replyItem._id)}
-                          className="rounded-none border border-t-white border-l-white border-r-[#404040] border-b-[#404040] bg-[#e4e2dc] px-2 py-1 text-xs text-black shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white"
+                          className="rounded-md bg-linear-to-b from-[#eef5ff] to-[#cfe1ff] px-3 py-1.5 text-xs text-[#0b3d91] shadow ring-1 ring-white/50 hover:from-white hover:to-[#dbe9ff] active:translate-y-px"
                         >
                           Delete
                         </button>
@@ -109,13 +137,13 @@ export default function Home() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleUpdateReply(advice._id, replyItem._id)}
-                        className="rounded-none border border-t-white border-l-white border-r-[#404040] border-b-[#404040] bg-[#e4e2dc] px-2 py-1 text-xs text-black shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white"
+                        className="rounded-md bg-linear-to-b from-[#eef5ff] to-[#cfe1ff] px-3 py-1.5 text-xs text-[#0b3d91] shadow ring-1 ring-white/50 hover:from-white hover:to-[#dbe9ff] active:translate-y-px"
                       >
                         Save
                       </button>
                       <button
                         onClick={() => setEditingReply(null)}
-                        className="rounded-none border border-t-white border-l-white border-r-[#404040] border-b-[#404040] bg-[#e4e2dc] px-2 py-1 text-xs text-black shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white"
+                        className="rounded-md bg-linear-to-b from-[#eef5ff] to-[#cfe1ff] px-3 py-1.5 text-xs text-[#0b3d91] shadow ring-1 ring-white/50 hover:from-white hover:to-[#dbe9ff] active:translate-y-px"
                       >
                         Cancel
                       </button>
@@ -131,7 +159,7 @@ export default function Home() {
   }
 
   function renderActions(advice: Advice) {
-    if (!isAuthenticated) return null
+    if (!isAuthenticated || !isOwner(advice._createdBy)) return null
     return (
       <div className="mt-3 flex gap-3">
         <button
@@ -140,13 +168,13 @@ export default function Home() {
             setForm({ title: advice.title, content: advice.content, anonymous: advice.anonymous })
             setIsModalOpen(true)
           }}
-          className="rounded-none border border-t-white border-l-white border-r-[#404040] border-b-[#404040] bg-[#e4e2dc] px-2 py-1 text-xs text-black shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white"
+          className="rounded-md bg-linear-to-b from-[#eef5ff] to-[#cfe1ff] px-3 py-1.5 text-xs text-[#0b3d91] shadow ring-1 ring-white/50 hover:from-white hover:to-[#dbe9ff] active:translate-y-px"
         >
           Edit advice
         </button>
         <button
           onClick={() => handleDelete(advice._id)}
-          className="rounded-none border border-t-white border-l-white border-r-[#404040] border-b-[#404040] bg-[#e4e2dc] px-2 py-1 text-xs text-black shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white"
+          className="rounded-md bg-linear-to-b from-[#eef5ff] to-[#cfe1ff] px-3 py-1.5 text-xs text-[#0b3d91] shadow ring-1 ring-white/50 hover:from-white hover:to-[#dbe9ff] active:translate-y-px"
         >
           Delete advice
         </button>
@@ -314,7 +342,7 @@ export default function Home() {
     <div
       className="mx-auto min-h-screen px-4 py-4"
       style={{
-        backgroundImage: "url('https://preview.redd.it/w6hb4pwm0fz31.jpg?width=1080&crop=smart&auto=webp&s=5da10aa1e09dd7694e9b1d6bb97e329ec52fdaef')",
+        backgroundImage: "url('https://cdn.wallpapersafari.com/28/82/OXgnsy.jpg')",
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundAttachment: 'fixed'
@@ -322,8 +350,8 @@ export default function Home() {
     >
       <div className="min-h-screen bg-[#d4d0c8]/ backdrop-blur-[0px] p-2">
      
-      <h1 className="mb-1 rounded-t-md bg-linear-to-r from-[#0a246a] to-[#3a6ea5] px-3 py-2 text-white font-semibold shadow">
-        Advice Board
+      <h1 className="flex justify-start text-3xl items-center rounded-t-xl bg-linear-to-r from-[#1f6feb] to-[#6ea8fe] px-5 py-3 shadow-lg ring-1 ring-white/40 backdrop-blur-sm">
+        Advice Board - Windows Vista
       </h1>
 
       <Nav />
@@ -341,22 +369,22 @@ export default function Home() {
           {advices.map(advice => (
             <div
               key={advice._id}
-              className="relative overflow-hidden rounded-none border border-t-white border-l-white border-r-[#404040] border-b-[#404040] bg-[#e4e2dc] p-3 shadow"
+              className="relative overflow-hidden rounded-xl bg-white/40 p-4 shadow-xl ring-1 ring-white/40 backdrop-blur-md"
             >
-              <h2 className="mb-1 rounded-t-sm bg-linear-to-r from-[#0a3cc8] to-[#034d9c] px-2 py-1 text-sm font-semibold text-white">
+              <h2 className="mb-2 rounded-md bg-linear-to-r from-[#1f6feb] to-[#6ea8fe] px-3 py-2 text-sm font-semibold text-white shadow">
                 {advice.title}
               </h2>
               <div className="mt-2">
                 {renderActions(advice)}
               </div>
 
-              <p className="mt-2 text-sm text-black">
+              <p className="mt-2 text-sm text-slate-900">
                 {advice.content}
               </p>
 
-              <div className="mt-3 text-sm text-gray-500">{renderAuthor(advice)}</div>
+              <div className="mt-3 text-sm text-slate-600">{renderAuthor(advice)}</div>
 
-              <div className="text-xs text-gray-400 mt-1">
+              <div className="mt-1 text-xs text-slate-500">
                 {new Date(advice.createdAt).toLocaleString()}
               </div>
               {renderReplies(advice)}
@@ -373,7 +401,7 @@ export default function Home() {
                   <button
                     onClick={() => handleAddReply(advice._id)}
                     disabled={!isAuthenticated}
-                    className="rounded-none border border-t-white border-l-white border-r-[#404040] border-b-[#404040] bg-[#e4e2dc] px-3 py-1 text-sm text-black shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white disabled:opacity-50"
+                    className="rounded-md bg-linear-to-b from-[#eef5ff] to-[#cfe1ff] px-3 py-1.5 text-xs text-[#0b3d91] shadow ring-1 ring-white/50 hover:from-white hover:to-[#dbe9ff] active:translate-y-px"
                   >
                     Reply
                   </button>
@@ -443,7 +471,7 @@ export default function Home() {
               </button>
               <button
                 onClick={editingId ? handleUpdate : handleCreate}
-                className="rounded-none border border-t-white border-l-white border-r-[#404040] border-b-[#404040] bg-[#e4e2dc] px-3 py-1 text-sm text-black shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white"
+                className="rounded-md bg-linear-to-b from-[#eef5ff] to-[#cfe1ff] px-3 py-1.5 text-xs text-[#0b3d91] shadow ring-1 ring-white/50 hover:from-white hover:to-[#dbe9ff] active:translate-y-px"
               >
                 {editingId ? 'Save changes' : 'Create'}
               </button>

@@ -24,27 +24,27 @@ export default function Nav() {
   const username = getUsernameFromToken()
 
   return (
-    <nav className="flex justify-end items-center mb-6 bg-linear-to-r from-[#0a246a] to-[#3a6ea5] px-4 py-2 rounded-b-md shadow">
-      <Link to="/" className='text-white hover:underline'>
+    <nav className="flex justify-end items-center mb-6 rounded-b-xl bg-linear-to-r from-[#1f6feb] to-[#6ea8fe] px-5 py-3 shadow-lg ring-1 ring-white/40 backdrop-blur-sm">
+      <Link to="/" className="mr-4 text-white/90 hover:text-white hover:underline">
         Home
       </Link>
 
       {isAuthenticated ? (
         <div className="flex items-center">
           {username && (
-            <span className="mx-2 text-sm text-white bg-blue-500 px-2 py-1 rounded">
+            <span className="mx-3 text-sm text-[#0b3d91] bg-white/70 px-3 py-1 rounded-lg shadow ring-1 ring-white/60 backdrop-blur-sm">
               Logged in as <strong>{username}</strong>
             </span>
           )}
           <button
             onClick={handleLogout}
-            className="hover:underline text-white"
+            className="ml-2 rounded-md bg-linear-to-b from-[#eef5ff] to-[#cfe1ff] px-3 py-1.5 text-xs text-[#0b3d91] shadow ring-1 ring-white/50 hover:from-white hover:to-[#dbe9ff] active:translate-y-px"
           >
             Logout
           </button>
         </div>
       ) : (
-        <Link to="/login" className="mx-4 text-white hover:underline">
+        <Link to="/login" className="mx-4 rounded-md bg-linear-to-b from-[#eef5ff] to-[#cfe1ff] px-3 py-1.5 text-xs text-[#0b3d91] shadow ring-1 ring-white/50 hover:from-white hover:to-[#dbe9ff] active:translate-y-px">
           Login
         </Link>
       )}
