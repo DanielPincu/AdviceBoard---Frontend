@@ -25,12 +25,6 @@ function getUsername(v: unknown, anonymous?: boolean): string {
   return 'User'
 }
 
-function isOwner(v: unknown, myUserId: string | null): boolean {
-  if (!myUserId) return false
-  if (isPopulatedUser(v)) return v._id === myUserId
-  if (typeof v === 'string') return v === myUserId
-  return false
-}
 
 
 export default function Home() {
@@ -49,18 +43,6 @@ export default function Home() {
   const isAuthenticated = Boolean(localStorage.getItem('token'))
   const [editingId, setEditingId] = useState<string | null>(null)
   
-  function getUserIdFromToken(): string | null {
-    const token = localStorage.getItem('token')
-    if (!token) return null
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1])) as { id?: string }
-      return payload?.id ?? null
-    } catch {
-      return null
-    }
-  }
-
-  const myUserId = getUserIdFromToken()
 
   function renderAuthor(advice: Advice) {
     return advice.anonymous ? 'Posted anonymously' : `Posted by ${getUsername(advice._createdBy)}`
@@ -80,7 +62,7 @@ export default function Home() {
                   {getUsername(replyItem._createdBy, replyItem.anonymous)} · {new Date(replyItem.createdAt).toLocaleString()}
                 </div>
               </div>
-              {isOwner(replyItem._createdBy, myUserId) && (
+              {isAuthenticated && (
                 <button
                   onClick={() => handleDeleteReply(advice._id, replyItem._id)}
                   className="rounded-none border border-t-white border-l-white border-r-[#404040] border-b-[#404040] bg-[#e4e2dc] px-2 py-1 text-xs text-black shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white"
@@ -96,8 +78,7 @@ export default function Home() {
   }
 
   function renderActions(advice: Advice) {
-    const mine = isOwner(advice._createdBy, myUserId)
-    if (!mine) return null
+    if (!isAuthenticated) return null
     return (
       <div className="mt-3 flex gap-3">
         <button
