@@ -44,3 +44,12 @@ export async function deleteReply(
 ): Promise<void> {
   await api.delete(`/advices/${adviceId}/replies/${replyId}`)
 }
+
+export async function updateReplyById(
+  adviceId: string,
+  replyId: string,
+  payload: { content?: string; anonymous?: boolean }
+): Promise<Advice> {
+  const { data } = await api.put<Advice>(`/advices/${adviceId}/replies/${replyId}`, payload)
+  return data
+}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { Advice } from '../interfaces/interface.advice'
-import { fetchAllAdvices, deleteAdviceById, createAdvice, addReply, deleteReply, updateAdviceById } from '../modules/module.advice'
+import { fetchAllAdvices, deleteAdviceById, createAdvice, addReply, deleteReply, updateAdviceById, updateReplyById } from '../modules/module.advice'
 import Nav from '../components/nav'
 import axios from 'axios'
 
@@ -42,6 +42,9 @@ export default function Home() {
   const [replyError, setReplyError] = useState<Record<string, string | null>>({})
   const isAuthenticated = Boolean(localStorage.getItem('token'))
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [editingReply, setEditingReply] = useState<{ adviceId: string; replyId: string } | null>(null)
+  const [replyEdit, setReplyEdit] = useState<Record<string, string>>({})
+  const [replyEditAnonymous, setReplyEditAnonymous] = useState<Record<string, boolean>>({})
   
 
   function renderAuthor(advice: Advice) {
@@ -54,24 +57,74 @@ export default function Home() {
       <div className="mt-4 border-t pt-3">
         <h3 className="text-sm font-semibold mb-2">Replies</h3>
         <ul className="space-y-2">
-          {advice.replies.map(replyItem => (
-            <li key={replyItem._id} className="text-sm text-gray-700 bg-gray-50 p-2 rounded flex items-start justify-between gap-2">
-              <div>
-                <p>{replyItem.content}</p>
-                <div className="mt-1 text-xs text-gray-500">
-                  {getUsername(replyItem._createdBy, replyItem.anonymous)} · {new Date(replyItem.createdAt).toLocaleString()}
-                </div>
-              </div>
-              {isAuthenticated && (
-                <button
-                  onClick={() => handleDeleteReply(advice._id, replyItem._id)}
-                  className="rounded-none border border-t-white border-l-white border-r-[#404040] border-b-[#404040] bg-[#e4e2dc] px-2 py-1 text-xs text-black shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white"
-                >
-                  Delete reply
-                </button>
-              )}
-            </li>
-          ))}
+          {advice.replies.map(replyItem => {
+            const isEditing = editingReply?.adviceId === advice._id && editingReply?.replyId === replyItem._id
+
+            return (
+              <li key={replyItem._id} className="text-sm text-gray-700 bg-gray-50 p-2 rounded">
+                {!isEditing ? (
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p>{replyItem.content}</p>
+                      <div className="mt-1 text-xs text-gray-500">
+                        {getUsername(replyItem._createdBy, replyItem.anonymous)} · {new Date(replyItem.createdAt).toLocaleString()}
+                      </div>
+                    </div>
+                    {isAuthenticated && (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            setEditingReply({ adviceId: advice._id, replyId: replyItem._id })
+                            setReplyEdit(prev => ({ ...prev, [replyItem._id]: replyItem.content }))
+                            setReplyEditAnonymous(prev => ({ ...prev, [replyItem._id]: !!replyItem.anonymous }))
+                          }}
+                          className="rounded-none border border-t-white border-l-white border-r-[#404040] border-b-[#404040] bg-[#e4e2dc] px-2 py-1 text-xs text-black shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteReply(advice._id, replyItem._id)}
+                          className="rounded-none border border-t-white border-l-white border-r-[#404040] border-b-[#404040] bg-[#e4e2dc] px-2 py-1 text-xs text-black shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <textarea
+                      className="w-full rounded-none border border-t-[#404040] border-l-[#404040] border-r-white border-b-white bg-white p-1 text-sm focus:outline-none"
+                      value={replyEdit[replyItem._id] || ''}
+                      onChange={e => setReplyEdit(prev => ({ ...prev, [replyItem._id]: e.target.value }))}
+                    />
+                    <label className="flex items-center gap-2 text-xs text-gray-600">
+                      <input
+                        type="checkbox"
+                        checked={!!replyEditAnonymous[replyItem._id]}
+                        onChange={e => setReplyEditAnonymous(prev => ({ ...prev, [replyItem._id]: e.target.checked }))}
+                      />
+                      Reply anonymously
+                    </label>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleUpdateReply(advice._id, replyItem._id)}
+                        className="rounded-none border border-t-white border-l-white border-r-[#404040] border-b-[#404040] bg-[#e4e2dc] px-2 py-1 text-xs text-black shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={() => setEditingReply(null)}
+                        className="rounded-none border border-t-white border-l-white border-r-[#404040] border-b-[#404040] bg-[#e4e2dc] px-2 py-1 text-xs text-black shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </li>
+            )
+          })}
         </ul>
       </div>
     )
@@ -102,6 +155,9 @@ export default function Home() {
   }
 
   async function handleDelete(_id: string) {
+    const ok = window.confirm('Are you sure you want to delete this post? This cannot be undone.')
+    if (!ok) return
+
     try {
       await deleteAdviceById(_id)
       setAdvices(prev => prev.filter(a => a._id !== _id))
@@ -205,6 +261,9 @@ export default function Home() {
   }
 
   async function handleDeleteReply(adviceId: string, replyId: string) {
+    const ok = window.confirm('Are you sure you want to delete this reply?')
+    if (!ok) return
+
     try {
       await deleteReply(adviceId, replyId)
       setAdvices(prev => prev.map(a =>
@@ -219,6 +278,30 @@ export default function Home() {
       }
       alert('Failed to delete reply.')
       console.error(err)
+    }
+  }
+
+  async function handleUpdateReply(adviceId: string, replyId: string) {
+    const content = replyEdit[replyId]?.trim()
+    if (!content || content.length < 3) {
+      setReplyError(prev => ({ ...prev, [adviceId]: 'Reply must be at least 3 characters' }))
+      return
+    }
+
+    try {
+      const anonymous = !!replyEditAnonymous[replyId]
+      const updated = await updateReplyById(adviceId, replyId, { content, anonymous })
+      setAdvices(prev => prev.map(a => (a._id === adviceId ? updated : a)))
+      setEditingReply(null)
+      setReplyEdit(prev => ({ ...prev, [replyId]: '' }))
+      setReplyEditAnonymous(prev => ({ ...prev, [replyId]: false }))
+      setReplyError(prev => ({ ...prev, [adviceId]: null }))
+    } catch (err: unknown) {
+      console.error('Update reply failed:', err)
+      const msg = axios.isAxiosError(err)
+        ? (err.response?.data as ApiErrorBody | undefined)?.message
+        : undefined
+      setReplyError(prev => ({ ...prev, [adviceId]: msg || 'Failed to update reply' }))
     }
   }
   
@@ -263,6 +346,9 @@ export default function Home() {
               <h2 className="mb-1 rounded-t-sm bg-linear-to-r from-[#0a3cc8] to-[#034d9c] px-2 py-1 text-sm font-semibold text-white">
                 {advice.title}
               </h2>
+              <div className="mt-2">
+                {renderActions(advice)}
+              </div>
 
               <p className="mt-2 text-sm text-black">
                 {advice.content}
@@ -306,7 +392,6 @@ export default function Home() {
                 )}
               </div>
 
-              {renderActions(advice)}
             </div>
           ))}
         </div>
