@@ -5,8 +5,6 @@ import AdviceCard from '../components/AdviceCard'
 import Nav from '../components/Nav'
 import AdviceModal from '../components/AdviceModal'
 import {
-  getUsername,
-  isOwner,
   handleDeleteAdvice,
   handleAddReplyToAdvice,
   handleDeleteReplyFromAdvice,
@@ -114,8 +112,6 @@ export default function AdviceDetails() {
         <AdviceCard
           advice={advice}
           isAuthenticated={isAuthenticated}
-          isOwner={isOwner}
-          getUsername={getUsername}
           editingReply={editingReply}
           setEditingReply={setEditingReply}
           replyEdit={replyEdit}

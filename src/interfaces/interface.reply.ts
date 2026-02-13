@@ -4,4 +4,5 @@ export interface Reply {
   createdAt: string
   anonymous: boolean
   _createdBy?: string
+  _isMine?: boolean
 }

@@ -6,5 +6,6 @@ export interface Advice {
   anonymous: boolean
   _createdBy: string
   createdAt: string
+  _isMine?: boolean
   replies: Reply[]
 }

@@ -1,12 +1,11 @@
 import type { Advice } from '../interfaces/interface.advice'
+import { getUsername } from '../utils/home.logic'
 
 type EditingReply = { adviceId: string; replyId: string } | null
 
 interface Props {
   advice: Advice
   isAuthenticated: boolean
-  isOwner: (createdBy: unknown) => boolean
-  getUsername: (v: unknown, anonymous?: boolean) => string
 
   editingReply: EditingReply
   setEditingReply: (v: EditingReply) => void
@@ -40,8 +39,6 @@ interface Props {
 export default function AdviceCard({
   advice,
   isAuthenticated,
-  isOwner,
-  getUsername,
   editingReply,
   setEditingReply,
   replyEdit,
@@ -62,7 +59,7 @@ export default function AdviceCard({
   const renderAuthor = () => {
     return advice.anonymous
       ? 'Reported anonymously'
-      : `Reported by ${getUsername(advice._createdBy)}`
+      : `Reported by ${getUsername(advice._createdBy, false)}`
   }
 
   return (
@@ -71,22 +68,24 @@ export default function AdviceCard({
         {advice.title}
       </h2>
 
-      {isAuthenticated && isOwner(advice._createdBy) && (
-        <div className="mt-2 flex gap-3">
-          <button
-            onClick={() => onEditAdvice(advice)}
-            className="rounded-md bg-linear-to-b from-[#eef5ff] to-[#cfe1ff] px-3 py-1.5 text-xs text-[#0b3d91] shadow ring-1 ring-white/50 hover:from-white hover:to-[#dbe9ff] active:translate-y-px"
-          >
-            Edit advice
-          </button>
-          <button
-            onClick={() => onDeleteAdvice(advice._id)}
-            className="rounded-md bg-linear-to-b from-[#eef5ff] to-[#cfe1ff] px-3 py-1.5 text-xs text-[#0b3d91] shadow ring-1 ring-white/50 hover:from-white hover:to-[#dbe9ff] active:translate-y-px"
-          >
-            Delete advice
-          </button>
-        </div>
-      )}
+      <div className="mt-2 min-h-9">
+        {isAuthenticated && advice._isMine && (
+          <div className="flex gap-3">
+            <button
+              onClick={() => onEditAdvice(advice)}
+              className="rounded-md bg-linear-to-b from-[#eef5ff] to-[#cfe1ff] px-3 py-1.5 text-xs text-[#0b3d91] shadow ring-1 ring-white/50 hover:from-white hover:to-[#dbe9ff] active:translate-y-px"
+            >
+              Edit advice
+            </button>
+            <button
+              onClick={() => onDeleteAdvice(advice._id)}
+              className="rounded-md bg-linear-to-b from-[#eef5ff] to-[#cfe1ff] px-3 py-1.5 text-xs text-[#0b3d91] shadow ring-1 ring-white/50 hover:from-white hover:to-[#dbe9ff] active:translate-y-px"
+            >
+              Delete advice
+            </button>
+          </div>
+        )}
+      </div>
 
       <p className="mt-2 text-sm text-slate-900">{advice.content}</p>
 
@@ -117,7 +116,7 @@ export default function AdviceCard({
                         </div>
                       </div>
 
-                      {isAuthenticated && isOwner(replyItem._createdBy) && (
+                      {isAuthenticated && replyItem._isMine && (
                         <div className="flex gap-2">
                           <button
                             onClick={() => {
