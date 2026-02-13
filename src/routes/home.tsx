@@ -48,7 +48,8 @@ export default function Home() {
       if (!mounted) return
       setIsLoading(true)
       try {
-        await loadAdvices(setAdvices)
+        const data = await loadAdvices()
+        setAdvices(data)
         if (!mounted) return
         setHasLoadError(false)
         setIsLoading(false)
@@ -138,29 +139,53 @@ export default function Home() {
                 setForm({ title: a.title, content: a.content, anonymous: a.anonymous })
                 setIsModalOpen(true)
               }}
-              onDeleteAdvice={(id) => handleDeleteAdvice(id, setAdvices)}
-              onAddReply={(adviceId) =>
-                handleAddReplyToAdvice(
-                  adviceId,
-                  reply[adviceId] || '',
-                  !!replyAnonymous[adviceId],
-                  setAdvices,
-                  (msg) => setReplyError(prev => ({ ...prev, [adviceId]: msg }))
-                )
-              }
-              onDeleteReply={(adviceId, replyId) => handleDeleteReplyFromAdvice(adviceId, replyId, setAdvices)}
+              onDeleteAdvice={async (id) => {
+                const deletedId = await handleDeleteAdvice(id)
+                if (deletedId) setAdvices(prev => prev.filter(a => a._id !== deletedId))
+              }}
+              onAddReply={async (adviceId) => {
+                try {
+                  const updated = await handleAddReplyToAdvice(
+                    adviceId,
+                    reply[adviceId] || '',
+                    !!replyAnonymous[adviceId]
+                  )
+                  setAdvices(prev => prev.map(a => (a._id === adviceId ? updated : a)))
+                  setReply(prev => ({ ...prev, [adviceId]: '' }))
+                  setReplyAnonymous(prev => ({ ...prev, [adviceId]: false }))
+                  setReplyError(prev => ({ ...prev, [adviceId]: null }))
+                } catch (e) {
+                  setReplyError(prev => ({ ...prev, [adviceId]: (e as Error).message }))
+                }
+              }}
+              onDeleteReply={async (adviceId, replyId) => {
+                try {
+                  await handleDeleteReplyFromAdvice(adviceId, replyId)
+                  setAdvices(prev => prev.map(a =>
+                    a._id === adviceId
+                      ? { ...a, replies: a.replies.filter(r => r._id !== replyId) }
+                      : a
+                  ))
+                } catch (e) {
+                  console.error(e)
+                }
+              }}
               onUpdateReply={async (adviceId, replyId) => {
-                await handleUpdateReplyOnAdvice(
-                  adviceId,
-                  replyId,
-                  replyEdit[replyId] || '',
-                  !!replyEditAnonymous[replyId],
-                  setAdvices,
-                  (msg) => setReplyError(prev => ({ ...prev, [adviceId]: msg }))
-                )
-                setEditingReply(null)
-                setReplyEdit(prev => ({ ...prev, [replyId]: '' }))
-                setReplyEditAnonymous(prev => ({ ...prev, [replyId]: false }))
+                try {
+                  const updated = await handleUpdateReplyOnAdvice(
+                    adviceId,
+                    replyId,
+                    replyEdit[replyId] || '',
+                    !!replyEditAnonymous[replyId]
+                  )
+                  setAdvices(prev => prev.map(a => (a._id === adviceId ? updated : a)))
+                  setEditingReply(null)
+                  setReplyEdit(prev => ({ ...prev, [replyId]: '' }))
+                  setReplyEditAnonymous(prev => ({ ...prev, [replyId]: false }))
+                  setReplyError(prev => ({ ...prev, [adviceId]: null }))
+                } catch (e) {
+                  setReplyError(prev => ({ ...prev, [adviceId]: (e as Error).message }))
+                }
               }}
               replyValue={reply[advice._id] || ''}
               setReplyValue={(v: string) => setReply(prev => ({ ...prev, [advice._id]: v }))}
@@ -184,31 +209,23 @@ export default function Home() {
           setForm({ title: '', content: '', anonymous: false })
           setCreateError(null)
         }}
-        onSubmit={() =>
-          editingId
-            ? handleUpdateAdvice(
-                editingId,
-                form,
-                setAdvices,
-                () => {
-                  setIsModalOpen(false)
-                  setEditingId(null)
-                  setForm({ title: '', content: '', anonymous: false })
-                  setCreateError(null)
-                },
-                setCreateError
-              )
-            : handleCreateAdvice(
-                form,
-                setAdvices,
-                () => {
-                  setIsModalOpen(false)
-                  setForm({ title: '', content: '', anonymous: false })
-                  setCreateError(null)
-                },
-                setCreateError
-              )
-        }
+        onSubmit={async () => {
+          try {
+            if (editingId) {
+              const updated = await handleUpdateAdvice(editingId, form)
+              setAdvices(prev => prev.map(a => (a._id === editingId ? updated : a)))
+              setEditingId(null)
+            } else {
+              const created = await handleCreateAdvice(form)
+              setAdvices(prev => [created, ...prev])
+            }
+            setIsModalOpen(false)
+            setForm({ title: '', content: '', anonymous: false })
+            setCreateError(null)
+          } catch (e) {
+            setCreateError((e as Error).message)
+          }
+        }}
       />
       </div>
     </div>

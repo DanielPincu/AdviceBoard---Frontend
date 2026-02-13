@@ -62,157 +62,85 @@ export function isOwner(createdBy: unknown): boolean {
 
 // -------- API actions --------
 
-export async function loadAdvices(setAdvices: (v: Advice[]) => void) {
-  const data = await fetchAllAdvices()
-  setAdvices(data)
+export async function loadAdvices(): Promise<Advice[]> {
+  return fetchAllAdvices()
 }
 
-export async function handleDeleteAdvice(
-  id: string,
-  setAdvices: (fn: (prev: Advice[]) => Advice[]) => void
-) {
+export async function handleDeleteAdvice(id: string): Promise<string | null> {
   const ok = window.confirm('Are you sure you want to delete this post? This cannot be undone.')
-  if (!ok) return
+  if (!ok) return null
 
   try {
     await deleteAdviceById(id)
-    setAdvices(prev => prev.filter(a => a._id !== id))
+    return id
   } catch (err: unknown) {
     if (axios.isAxiosError(err) && err.response?.status === 403) {
       alert('You can only delete your own posts.')
-      return
+      return null
     }
     alert('Failed to delete post.')
     console.error(err)
+    return null
   }
 }
 
-export async function handleCreateAdvice(
-  form: { title: string; content: string; anonymous: boolean },
-  setAdvices: (fn: (prev: Advice[]) => Advice[]) => void,
-  onSuccess: () => void,
-  setError: (v: string | null) => void
-) {
-  setError(null)
-
+export async function handleCreateAdvice(form: { title: string; content: string; anonymous: boolean }): Promise<Advice> {
   const title = form.title.trim()
   const content = form.content.trim()
 
-  if (title.length < 3) return setError('Title must be at least 3 characters')
-  if (content.length < 3) return setError('Content must be at least 3 characters')
+  if (title.length < 3) throw new Error('Title must be at least 3 characters')
+  if (content.length < 3) throw new Error('Content must be at least 3 characters')
 
-  try {
-    const created = await createAdvice({ ...form, title, content })
-    setAdvices(prev => [created, ...prev])
-    onSuccess()
-  } catch (err: unknown) {
-    const msg = axios.isAxiosError(err)
-      ? (err.response?.data as ApiErrorBody | undefined)?.message
-      : undefined
-    setError(msg || 'Failed to create advice. Check your input.')
-  }
+  return createAdvice({ ...form, title, content })
 }
 
 export async function handleUpdateAdvice(
   id: string,
-  form: { title: string; content: string; anonymous: boolean },
-  setAdvices: (fn: (prev: Advice[]) => Advice[]) => void,
-  onSuccess: () => void,
-  setError: (v: string | null) => void
-) {
-  setError(null)
-
+  form: { title: string; content: string; anonymous: boolean }
+): Promise<Advice> {
   const title = form.title.trim()
   const content = form.content.trim()
 
-  if (title.length < 3) return setError('Title must be at least 3 characters')
-  if (content.length < 3) return setError('Content must be at least 3 characters')
+  if (title.length < 3) throw new Error('Title must be at least 3 characters')
+  if (content.length < 3) throw new Error('Content must be at least 3 characters')
 
-  try {
-    const updated = await updateAdviceById(id, { title, content, anonymous: form.anonymous })
-    setAdvices(prev => prev.map(a => (a._id === id ? updated : a)))
-    onSuccess()
-  } catch (err: unknown) {
-    const msg = axios.isAxiosError(err)
-      ? (err.response?.data as ApiErrorBody | undefined)?.message
-      : undefined
-    setError(msg || 'Failed to update advice. Check your input.')
-  }
+  return updateAdviceById(id, { title, content, anonymous: form.anonymous })
 }
 
 export async function handleAddReplyToAdvice(
   adviceId: string,
   content: string,
-  anonymous: boolean,
-  setAdvices: (fn: (prev: Advice[]) => Advice[]) => void,
-  setError: (v: string | null) => void
-) {
+  anonymous: boolean
+): Promise<Advice> {
   if (!content || content.trim().length < 3) {
-    return setError('Reply must be at least 3 characters')
+    throw new Error('Reply must be at least 3 characters')
   }
 
-  try {
-    const updated = await addReply(adviceId, { content: content.trim(), anonymous })
-    setAdvices(prev => prev.map(a => (a._id === adviceId ? updated : a)))
-    setError(null)
-  } catch (err: unknown) {
-    const msg = axios.isAxiosError(err)
-      ? (err.response?.data as ApiErrorBody | undefined)?.message
-      : undefined
-    setError(msg || 'Failed to add reply')
-  }
+  return addReply(adviceId, { content: content.trim(), anonymous })
 }
 
 export async function handleDeleteReplyFromAdvice(
   adviceId: string,
-  replyId: string,
-  setAdvices: (fn: (prev: Advice[]) => Advice[]) => void
-) {
+  replyId: string
+): Promise<void> {
   const ok = window.confirm('Are you sure you want to delete this reply?')
-  if (!ok) return
+  if (!ok) throw new Error('Cancelled')
 
-  try {
-    await deleteReply(adviceId, replyId)
-    setAdvices(prev =>
-      prev.map(a =>
-        a._id === adviceId
-          ? { ...a, replies: a.replies.filter(r => r._id !== replyId) }
-          : a
-      )
-    )
-  } catch (err: unknown) {
-    if (axios.isAxiosError(err) && err.response?.status === 403) {
-      alert('You can only delete your own replies.')
-      return
-    }
-    alert('Failed to delete reply.')
-    console.error(err)
-  }
+  await deleteReply(adviceId, replyId)
 }
 
 export async function handleUpdateReplyOnAdvice(
   adviceId: string,
   replyId: string,
   content: string,
-  anonymous: boolean,
-  setAdvices: (fn: (prev: Advice[]) => Advice[]) => void,
-  setError: (v: string | null) => void
-) {
+  anonymous: boolean
+): Promise<Advice> {
   if (!content || content.trim().length < 3) {
-    return setError('Reply must be at least 3 characters')
+    throw new Error('Reply must be at least 3 characters')
   }
 
-  try {
-    const updated = await updateReplyById(adviceId, replyId, {
-      content: content.trim(),
-      anonymous,
-    })
-    setAdvices(prev => prev.map(a => (a._id === adviceId ? updated : a)))
-    setError(null)
-  } catch (err: unknown) {
-    const msg = axios.isAxiosError(err)
-      ? (err.response?.data as ApiErrorBody | undefined)?.message
-      : undefined
-    setError(msg || 'Failed to update reply')
-  }
+  return updateReplyById(adviceId, replyId, {
+    content: content.trim(),
+    anonymous,
+  })
 }
