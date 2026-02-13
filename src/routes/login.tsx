@@ -33,21 +33,29 @@ export default function Login() {
   }
 
   return (
-    <div className="mx-auto bg-[#d4d0c8] px-4 py-4 min-h-screen">
+    <div
+      className="mx-auto min-h-screen px-4 py-4"
+      style={{
+        backgroundImage: "url('https://cdn.wallpapersafari.com/28/82/OXgnsy.jpg')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+      }}
+    >
       
-      <h1 className="mb-1 rounded-t-md bg-linear-to-r from-[#0a246a] to-[#3a6ea5] px-3 py-2 text-white font-semibold shadow">
-        Advice Board
+      <h1 className="flex justify-start text-3xl items-center rounded-t-xl bg-linear-to-r from-[#1f6feb] to-[#6ea8fe] px-5 py-3 shadow-lg ring-1 ring-white/40 backdrop-blur-sm">
+        Advice Board - Windows Vista
       </h1>
       <Nav />
-      <div className="mx-auto mt-10 max-w-md border border-t-white border-l-white border-r-[#404040] border-b-[#404040] bg-[#e4e2dc] p-3 shadow">
-        <h1 className="mb-3 rounded-t-sm bg-linear-to-r from-[#0a246a] to-[#3a6ea5] px-3 py-2 text-sm font-semibold text-white shadow">
+      <div className="mx-auto mt-10 max-w-md rounded-lg border border-white/40 bg-white/70 p-4 shadow-2xl backdrop-blur-md">
+        <h1 className="mb-2 rounded-md bg-linear-to-r from-[#1f6feb] to-[#6ea8fe] px-3 py-2 text-sm font-semibold text-white shadow">
           {mode === 'login' ? 'Login' : 'Register'}
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-3">
           {mode === 'register' && (
             <input
-              className="w-full rounded-none border border-t-[#404040] border-l-[#404040] border-r-white border-b-white bg-white px-2 py-1 text-sm focus:outline-none"
+              className="w-full rounded-none border border-t-[#404040] border-l-[#404040] border-r-white border-b-white bg-white/80 backdrop-blur-sm px-2 py-1 text-sm focus:outline-none"
               placeholder="Username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -56,7 +64,7 @@ export default function Login() {
           )}
 
           <input
-            className="w-full rounded-none border border-t-[#404040] border-l-[#404040] border-r-white border-b-white bg-white px-2 py-1 text-sm focus:outline-none"
+            className="w-full rounded-none border border-t-[#404040] border-l-[#404040] border-r-white border-b-white bg-white/80 backdrop-blur-sm px-2 py-1 text-sm focus:outline-none"
             type="email"
             placeholder="Email"
             value={email}
@@ -65,7 +73,7 @@ export default function Login() {
           />
 
           <input
-            className="w-full rounded-none border border-t-[#404040] border-l-[#404040] border-r-white border-b-white bg-white px-2 py-1 text-sm focus:outline-none"
+            className="w-full rounded-none border border-t-[#404040] border-l-[#404040] border-r-white border-b-white bg-white/80 backdrop-blur-sm px-2 py-1 text-sm focus:outline-none"
             type="password"
             placeholder="Password"
             value={password}
@@ -77,7 +85,7 @@ export default function Login() {
 
           <button
             disabled={loading}
-            className="w-full rounded-none border border-t-white border-l-white border-r-[#404040] border-b-[#404040] bg-[#e4e2dc] py-2 text-sm text-black shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white disabled:opacity-50"
+            className="w-full rounded-md border border-white/60 bg-linear-to-b from-white/80 to-[#c9def5] py-2 text-sm text-black shadow-md hover:from-white hover:to-[#b7d1f0] active:translate-y-px disabled:opacity-50"
             type="submit"
           >
             {loading ? 'Please wait...' : mode === 'login' ? 'Login' : 'Register'}
@@ -87,14 +95,14 @@ export default function Login() {
         <div className="mt-3 text-sm">
           {mode === 'login' ? (
             <button
-              className="rounded-none border border-t-white border-l-white border-r-[#404040] border-b-[#404040] bg-[#e4e2dc] px-2 py-1 text-xs text-black shadow hover:bg-[#f2f0ea] active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white"
+              className="rounded-md border border-white/60 bg-linear-to-b from-white/80 to-[#c9def5] px-2 py-1 text-xs text-black shadow-md hover:from-white hover:to-[#b7d1f0] active:translate-y-px"
               onClick={() => setMode('register')}
             >
               Need an account? Register
             </button>
           ) : (
             <button
-              className="rounded-none border border-t-white border-l-white border-r-[#404040] border-b-[#404040] bg-[#e4e2dc] px-2 py-1 text-xs text-black shadow hover:bg-[#f2f0ea] active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white"
+              className="rounded-md border border-white/60 bg-linear-to-b from-white/80 to-[#c9def5] px-2 py-1 text-xs text-black shadow-md hover:from-white hover:to-[#b7d1f0] active:translate-y-px"
               onClick={() => setMode('login')}
             >
               Already have an account? Login

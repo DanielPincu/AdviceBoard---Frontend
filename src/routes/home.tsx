@@ -76,14 +76,14 @@ export default function Home() {
   
 
   function renderAuthor(advice: Advice) {
-    return advice.anonymous ? 'Posted anonymously' : `Posted by ${getUsername(advice._createdBy)}`
+    return advice.anonymous ? 'Reported anonymously' : `Reported by ${getUsername(advice._createdBy)}`
   }
 
   function renderReplies(advice: Advice) {
     if (!advice.replies?.length) return null
     return (
       <div className="mt-4 border-t pt-3">
-        <h3 className="text-sm font-semibold mb-2">Replies</h3>
+        <h3 className="text-sm font-semibold mb-2">Possible solutions</h3>
         <ul className="space-y-2">
           {advice.replies.map(replyItem => {
             const isEditing = editingReply?.adviceId === advice._id && editingReply?.replyId === replyItem._id
@@ -350,8 +350,9 @@ export default function Home() {
     >
       <div className="min-h-screen bg-[#d4d0c8]/ backdrop-blur-[0px] p-2">
      
-      <h1 className="flex justify-start text-3xl items-center rounded-t-xl bg-linear-to-r from-[#1f6feb] to-[#6ea8fe] px-5 py-3 shadow-lg ring-1 ring-white/40 backdrop-blur-sm">
-        Advice Board - Windows Vista
+        <h1 className="flex flex-col gap-1 rounded-t-xl bg-linear-to-r from-[#0b5bd3] to-[#79b1ff] px-5 py-3 shadow-lg ring-1 ring-white/40 backdrop-blur-sm">
+        <span className="text-2xl font-semibold text-white">Windows Troubleshooting</span>
+        <span className="text-xs text-white/90">Find solutions to common problems</span>
       </h1>
 
       <Nav />
@@ -359,9 +360,10 @@ export default function Home() {
       <button
         onClick={() => setIsModalOpen(true)}
         disabled={!isAuthenticated}
-        className="mb-4 rounded-none border border-t-white border-l-white border-r-[#404040] border-b-[#404040] bg-[#e4e2dc] px-3 py-1 text-sm text-black shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white disabled:opacity-50"
+        className="rounded-md bg-linear-to-b from-[#eef5ff] to-[#cfe1ff] px-3 py-3 text-xs text-[#0b3d91] shadow ring-1 ring-white/50 hover:from-white hover:to-[#dbe9ff] active:translate-y-px
+        mb-5"
       >
-        {isAuthenticated ? 'Ask a question or give an advice' : 'Login to ask a question or give an advice'}
+        {isAuthenticated ? 'Create troubleshooting request' : 'Login to create troubleshooting request'}
       </button>
 
       {advices.length > 0 && (
@@ -393,7 +395,7 @@ export default function Home() {
                 <div className="flex gap-2">
                   <input
                     className="flex-1 rounded-none border border-t-[#404040] border-l-[#404040] border-r-white border-b-white bg-white px-2 py-1 text-sm focus:outline-none"
-                    placeholder={isAuthenticated ? 'Write a reply...' : 'Login to reply'}
+                    placeholder={isAuthenticated ? 'Add a possible solution…' : 'Login to add a solution'}
                     value={reply[advice._id] || ''}
                     onChange={e => setReply(prev => ({ ...prev, [advice._id]: e.target.value }))}
                     disabled={!isAuthenticated}
@@ -403,7 +405,7 @@ export default function Home() {
                     disabled={!isAuthenticated}
                     className="rounded-md bg-linear-to-b from-[#eef5ff] to-[#cfe1ff] px-3 py-1.5 text-xs text-[#0b3d91] shadow ring-1 ring-white/50 hover:from-white hover:to-[#dbe9ff] active:translate-y-px"
                   >
-                    Reply
+                    {isAuthenticated ? 'Add solution' : 'Login to add solution'}
                   </button>
                 </div>
                 <label className="mt-2 flex items-center gap-2 text-xs text-gray-600">
@@ -413,7 +415,7 @@ export default function Home() {
                     onChange={e => setReplyAnonymous(prev => ({ ...prev, [advice._id]: e.target.checked }))}
                     disabled={!isAuthenticated}
                   />
-                  Reply anonymously
+                  Post solution anonymously
                 </label>
                 {replyError[advice._id] && (
                   <p className="mt-1 text-xs text-red-600">{replyError[advice._id]}</p>
