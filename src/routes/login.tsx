@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Nav from '../components/nav'
+import Nav from '../components/Nav'
 import { login, register } from '../modules/module.auth'
 
 export default function Login() {
@@ -43,7 +43,7 @@ export default function Login() {
       }}
     >
       
-      <h1 className="flex justify-start text-3xl items-center rounded-t-xl bg-linear-to-r from-[#1f6feb] to-[#6ea8fe] px-5 py-3 shadow-lg ring-1 ring-white/40 backdrop-blur-sm">
+      <h1 className="text-white flex justify-start text-3xl items-center rounded-t-xl bg-linear-to-r from-[#1f6feb] to-[#6ea8fe] px-5 py-3 shadow-lg ring-1 ring-white/40 backdrop-blur-sm">
         Advice Board - Windows Vista
       </h1>
       <Nav />

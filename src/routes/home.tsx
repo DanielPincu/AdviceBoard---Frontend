@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { Advice } from '../interfaces/interface.advice'
-import Nav from '../components/nav'
+import Nav from '../components/Nav'
 import AdviceCard from '../components/AdviceCard'
 import AdviceModal from '../components/AdviceModal'
 import {
@@ -149,8 +149,8 @@ export default function Home() {
                 )
               }
               onDeleteReply={(adviceId, replyId) => handleDeleteReplyFromAdvice(adviceId, replyId, setAdvices)}
-              onUpdateReply={(adviceId, replyId) =>
-                handleUpdateReplyOnAdvice(
+              onUpdateReply={async (adviceId, replyId) => {
+                await handleUpdateReplyOnAdvice(
                   adviceId,
                   replyId,
                   replyEdit[replyId] || '',
@@ -158,7 +158,10 @@ export default function Home() {
                   setAdvices,
                   (msg) => setReplyError(prev => ({ ...prev, [adviceId]: msg }))
                 )
-              }
+                setEditingReply(null)
+                setReplyEdit(prev => ({ ...prev, [replyId]: '' }))
+                setReplyEditAnonymous(prev => ({ ...prev, [replyId]: false }))
+              }}
               replyValue={reply[advice._id] || ''}
               setReplyValue={(v: string) => setReply(prev => ({ ...prev, [advice._id]: v }))}
               replyAnonymous={!!replyAnonymous[advice._id]}
