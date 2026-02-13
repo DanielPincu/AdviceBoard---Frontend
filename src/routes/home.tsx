@@ -1,19 +1,9 @@
 import { useEffect, useState } from 'react'
 import type { Advice } from '../interfaces/interface.advice'
 import Nav from '../components/Nav'
-import AdviceCard from '../components/AdviceCard'
+import AdvicePreviewCard from '../components/AdvicePreviewCard'
 import AdviceModal from '../components/AdviceModal'
-import {
-  getUsername,
-  isOwner,
-  loadAdvices,
-  handleDeleteAdvice,
-  handleCreateAdvice,
-  handleUpdateAdvice,
-  handleAddReplyToAdvice,
-  handleDeleteReplyFromAdvice,
-  handleUpdateReplyOnAdvice,
-} from '../utils/home.logic'
+import { loadAdvices, handleCreateAdvice, handleUpdateAdvice } from '../utils/home.logic'
 
 
 
@@ -28,15 +18,9 @@ export default function Home() {
     content: '',
     anonymous: false,
   })
-  const [reply, setReply] = useState<Record<string, string>>({})
-  const [replyAnonymous, setReplyAnonymous] = useState<Record<string, boolean>>({})
   const [createError, setCreateError] = useState<string | null>(null)
-  const [replyError, setReplyError] = useState<Record<string, string | null>>({})
   const isAuthenticated = Boolean(localStorage.getItem('token'))
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [editingReply, setEditingReply] = useState<{ adviceId: string; replyId: string } | null>(null)
-  const [replyEdit, setReplyEdit] = useState<Record<string, string>>({})
-  const [replyEditAnonymous, setReplyEditAnonymous] = useState<Record<string, boolean>>({})
   
 
 
@@ -122,77 +106,7 @@ export default function Home() {
       {!isLoading && advices.length > 0 && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {advices.map(advice => (
-            <AdviceCard
-              key={advice._id}
-              advice={advice}
-              isAuthenticated={isAuthenticated}
-              isOwner={isOwner}
-              getUsername={getUsername}
-              editingReply={editingReply}
-              setEditingReply={setEditingReply}
-              replyEdit={replyEdit}
-              setReplyEdit={setReplyEdit}
-              replyEditAnonymous={replyEditAnonymous}
-              setReplyEditAnonymous={setReplyEditAnonymous}
-              onEditAdvice={(a: Advice) => {
-                setEditingId(a._id)
-                setForm({ title: a.title, content: a.content, anonymous: a.anonymous })
-                setIsModalOpen(true)
-              }}
-              onDeleteAdvice={async (id) => {
-                const deletedId = await handleDeleteAdvice(id)
-                if (deletedId) setAdvices(prev => prev.filter(a => a._id !== deletedId))
-              }}
-              onAddReply={async (adviceId) => {
-                try {
-                  const updated = await handleAddReplyToAdvice(
-                    adviceId,
-                    reply[adviceId] || '',
-                    !!replyAnonymous[adviceId]
-                  )
-                  setAdvices(prev => prev.map(a => (a._id === adviceId ? updated : a)))
-                  setReply(prev => ({ ...prev, [adviceId]: '' }))
-                  setReplyAnonymous(prev => ({ ...prev, [adviceId]: false }))
-                  setReplyError(prev => ({ ...prev, [adviceId]: null }))
-                } catch (e) {
-                  setReplyError(prev => ({ ...prev, [adviceId]: (e as Error).message }))
-                }
-              }}
-              onDeleteReply={async (adviceId, replyId) => {
-                try {
-                  await handleDeleteReplyFromAdvice(adviceId, replyId)
-                  setAdvices(prev => prev.map(a =>
-                    a._id === adviceId
-                      ? { ...a, replies: a.replies.filter(r => r._id !== replyId) }
-                      : a
-                  ))
-                } catch (e) {
-                  console.error(e)
-                }
-              }}
-              onUpdateReply={async (adviceId, replyId) => {
-                try {
-                  const updated = await handleUpdateReplyOnAdvice(
-                    adviceId,
-                    replyId,
-                    replyEdit[replyId] || '',
-                    !!replyEditAnonymous[replyId]
-                  )
-                  setAdvices(prev => prev.map(a => (a._id === adviceId ? updated : a)))
-                  setEditingReply(null)
-                  setReplyEdit(prev => ({ ...prev, [replyId]: '' }))
-                  setReplyEditAnonymous(prev => ({ ...prev, [replyId]: false }))
-                  setReplyError(prev => ({ ...prev, [adviceId]: null }))
-                } catch (e) {
-                  setReplyError(prev => ({ ...prev, [adviceId]: (e as Error).message }))
-                }
-              }}
-              replyValue={reply[advice._id] || ''}
-              setReplyValue={(v: string) => setReply(prev => ({ ...prev, [advice._id]: v }))}
-              replyAnonymous={!!replyAnonymous[advice._id]}
-              setReplyAnonymous={(v: boolean) => setReplyAnonymous(prev => ({ ...prev, [advice._id]: v }))}
-              replyError={replyError[advice._id] || null}
-            />
+            <AdvicePreviewCard key={advice._id} advice={advice} />
           ))}
         </div>
       )}
