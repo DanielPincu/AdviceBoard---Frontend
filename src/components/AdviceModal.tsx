@@ -25,21 +25,21 @@ export default function AdviceModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-      <div className="w-full max-w-md overflow-hidden rounded-xl bg-white/60 shadow-xl ring-1 ring-white/50 backdrop-blur-md">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-lg">
+      <div className="w-full max-w-2xl overflow-hidden rounded-xl bg-white/60 shadow-xl ring-1 ring-white/50 backdrop-blur-lg">
         <div className="rounded-t-xl bg-linear-to-r from-[#1f6feb] to-[#6ea8fe] px-4 py-2 text-sm font-semibold text-white shadow">
           {editingId ? 'Edit question or advice' : 'Ask question or give advice'}
         </div>
-        <div className="p-4">
+        <div className="p-6">
           <input
-            className="mb-2 w-full rounded-none border border-t-[#404040] border-l-[#404040] border-r-white border-b-white bg-white p-1 text-sm focus:outline-none"
+            className="mb-3 w-full rounded-md border border-t-[#404040] border-l-[#404040] border-r-white border-b-white bg-white px-3 py-2 text-base focus:outline-none"
             placeholder="Title"
             value={form.title}
             onChange={e => setForm({ ...form, title: e.target.value })}
           />
 
           <textarea
-            className="mb-2 w-full rounded-none border border-t-[#404040] border-l-[#404040] border-r-white border-b-white bg-white p-1 text-sm focus:outline-none"
+            className="mb-3 w-full min-h-35 resize-y rounded-md border border-t-[#404040] border-l-[#404040] border-r-white border-b-white bg-white px-3 py-2 text-base focus:outline-none"
             placeholder="Content"
             value={form.content}
             onChange={e => setForm({ ...form, content: e.target.value })}

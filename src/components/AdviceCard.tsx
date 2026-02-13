@@ -144,7 +144,7 @@ export default function AdviceCard({
                   ) : (
                     <div className="space-y-2">
                       <textarea
-                        className="w-full rounded-none border border-t-[#404040] border-l-[#404040] border-r-white border-b-white bg-white p-1 text-sm focus:outline-none"
+                        className="w-full min-h-20 resize-y rounded-md border border-t-[#404040] border-l-[#404040] border-r-white border-b-white bg-white px-3 py-2 text-base focus:outline-none"
                         value={replyEdit[replyItem._id] || ''}
                         onChange={e =>
                           setReplyEdit(prev => ({ ...prev, [replyItem._id]: e.target.value }))
@@ -188,8 +188,8 @@ export default function AdviceCard({
 
       <div className="mt-3">
         <div className="flex gap-2">
-          <input
-            className="flex-1 rounded-none border border-t-[#404040] border-l-[#404040] border-r-white border-b-white bg-white px-2 py-1 text-sm focus:outline-none"
+          <textarea
+            className="flex-1 min-h-20 resize-y rounded-md border border-t-[#404040] border-l-[#404040] border-r-white border-b-white bg-white px-3 py-2 text-base focus:outline-none"
             placeholder={isAuthenticated ? 'Add a possible solution…' : 'Login to add a solution'}
             value={replyValue}
             onChange={e => setReplyValue(e.target.value)}
