@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_ROOT = 'http://localhost:4000/api'
+const API_ROOT = 'https://adviceboard-backend.onrender.com/api'
 
 export const api = axios.create({
   baseURL: API_ROOT,
