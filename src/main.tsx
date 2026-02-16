@@ -4,6 +4,8 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import Home from './routes/home'
 import Login from './routes/login'
 import AdviceDetails from './routes/advice.details'
+import MyPosts from './routes/my-posts'
+import UserPosts from './routes/user-posts'
 import './css/global.css'
 
 
@@ -19,6 +21,14 @@ const router = createBrowserRouter([
   {
     path: '/login',
     element: <Login />,
+  },
+  {
+    path: '/user/me',
+    element: <MyPosts />,
+  },
+  {
+    path: '/user/:userId',
+    element: <UserPosts />,
   },
 ])
 

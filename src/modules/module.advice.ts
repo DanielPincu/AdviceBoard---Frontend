@@ -11,6 +11,11 @@ export async function fetchAdviceById(id: string): Promise<Advice> {
     return data
 }
 
+export async function fetchAdvicesByUser(userId: string): Promise<Advice[]> {
+  const { data } = await api.get<Advice[]>(`/users/${userId}/advices`)
+  return data
+}
+
 export async function updateAdviceById(
     id: string,
     payload: Partial<Advice>

@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import type { Advice } from '../interfaces/interface.advice'
 import { getUsername } from '../utils/home.logic'
 
@@ -8,6 +8,11 @@ interface Props {
 
 export default function AdvicePreviewCard({ advice }: Props) {
   const navigate = useNavigate()
+
+  const userId =
+    advice._createdBy && typeof advice._createdBy === 'object' && '_id' in advice._createdBy
+      ? String((advice._createdBy as { _id: string })._id)
+      : null
 
   return (
     <div className="relative overflow-hidden rounded-xl bg-white/40 p-4 shadow-xl ring-1 ring-white/40 backdrop-blur-md">
@@ -20,7 +25,21 @@ export default function AdvicePreviewCard({ advice }: Props) {
       </p>
 
       <div className="mt-3 text-sm text-slate-600">
-        {advice.anonymous ? 'Reported anonymously' : `Reported by ${getUsername(advice._createdBy)}`}
+        {advice.anonymous ? (
+          'Reported anonymously'
+        ) : userId ? (
+          <span>
+            Reported by{' '}
+            <Link
+              to={`/user/${userId}`}
+              className="text-blue-700 underline hover:text-blue-900"
+            >
+              {getUsername(advice._createdBy, false)}
+            </Link>
+          </span>
+        ) : (
+          `Reported by ${getUsername(advice._createdBy, false)}`
+        )}
       </div>
 
       <div className="mt-1 text-xs text-slate-500">

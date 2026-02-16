@@ -1,5 +1,6 @@
 import type { Advice } from '../interfaces/interface.advice'
 import { getUsername } from '../utils/home.logic'
+import { Link } from 'react-router-dom'
 
 type EditingReply = { adviceId: string; replyId: string } | null
 
@@ -57,9 +58,30 @@ export default function AdviceCard({
   replyError,
 }: Props) {
   const renderAuthor = () => {
-    return advice.anonymous
-      ? 'Reported anonymously'
-      : `Reported by ${getUsername(advice._createdBy, false)}`
+    if (advice.anonymous) return 'Reported anonymously'
+
+    const userId =
+      advice._createdBy &&
+      typeof advice._createdBy === 'object' &&
+      '_id' in advice._createdBy
+        ? String((advice._createdBy as { _id: string })._id)
+        : null
+
+    const username = getUsername(advice._createdBy, false)
+
+    if (!userId) return `Reported by ${username}`
+
+    return (
+      <span>
+        Reported by{' '}
+        <Link
+          to={`/user/${userId}`}
+          className="text-blue-700 underline hover:text-blue-900"
+        >
+          {username}
+        </Link>
+      </span>
+    )
   }
 
   return (
@@ -111,7 +133,25 @@ export default function AdviceCard({
                       <div>
                         <p>{replyItem.content}</p>
                         <div className="mt-1 text-xs text-gray-500">
-                          {getUsername(replyItem._createdBy, replyItem.anonymous)} ·{' '}
+                          {replyItem.anonymous ? (
+                            'Anonymous'
+                          ) : replyItem._createdBy && typeof replyItem._createdBy === 'object' ? (
+                            <Link
+                              to={`/user/${
+                                replyItem._createdBy &&
+                                typeof replyItem._createdBy === 'object' &&
+                                '_id' in replyItem._createdBy
+                                  ? String((replyItem._createdBy as { _id: string })._id)
+                                  : ''
+                              }`}
+                              className="text-blue-700 underline hover:text-blue-900"
+                            >
+                              {getUsername(replyItem._createdBy, false)}
+                            </Link>
+                          ) : (
+                            getUsername(replyItem._createdBy, false)
+                          )}{' '}
+                          ·{' '}
                           {new Date(replyItem.createdAt).toLocaleString()}
                         </div>
                       </div>

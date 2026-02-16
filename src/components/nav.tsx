@@ -1,7 +1,7 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 export default function Nav() {
-
+  const navigate = useNavigate()
 
   const isAuthenticated = Boolean(localStorage.getItem('token'))
 
@@ -32,9 +32,12 @@ export default function Nav() {
       {isAuthenticated ? (
         <div className="flex items-center">
           {username && (
-            <span className="mx-3 text-sm text-[#0b3d91] bg-white/70 px-3 py-1 rounded-lg shadow ring-1 ring-white/60 backdrop-blur-sm">
+            <button
+              onClick={() => navigate('/user/me')}
+              className="mx-3 text-sm text-[#0b3d91] bg-white/70 px-3 py-1 rounded-lg shadow ring-1 ring-white/60 backdrop-blur-sm hover:underline"
+            >
               Logged in as <strong>{username}</strong>
-            </span>
+            </button>
           )}
           <button
             onClick={handleLogout}
