@@ -36,9 +36,16 @@ export default function MyPosts() {
       }}
     >
       <div className="min-h-screen bg-[#d4d0c8]/ backdrop-blur-[0px] p-2">
-        <h1 className="flex flex-col gap-1 rounded-t-xl bg-linear-to-r from-[#0b5bd3] to-[#79b1ff] px-5 py-3 shadow-lg ring-1 ring-white/40 backdrop-blur-sm">
-          <span className="text-2xl font-semibold text-white">Windows Vista Troubleshooting</span>
-          <span className="text-xs text-white/90">My posts</span>
+        <h1 className="flex items-center gap-3 rounded-t-xl bg-linear-to-r from-[#0b5bd3] to-[#79b1ff] px-5 py-3 shadow-lg ring-1 ring-white/40 backdrop-blur-sm">
+          <img
+            src="https://upload.wikimedia.org/wikipedia/de/thumb/0/00/Windows_Vista_Logo.svg/250px-Windows_Vista_Logo.svg.png"
+            alt="Windows Vista"
+            className="h-32 w-32 drop-shadow-2xl"
+          />
+          <div className="flex flex-col gap-1">
+            <span className="text-2xl font-semibold text-white">Windows Vista Troubleshooting</span>
+            <span className="text-xs text-white/90">My posts</span>
+          </div>
         </h1>
 
         <Nav />
