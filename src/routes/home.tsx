@@ -5,6 +5,7 @@ import Nav from '../components/Nav'
 import AdvicePreviewCard from '../components/AdvicePreviewCard'
 import AdviceModal from '../components/AdviceModal'
 import { loadAdvices, handleCreateAdvice, handleUpdateAdvice } from '../utils/home.logic'
+import SearchBar from '../components/SearchBar'
 
 
 
@@ -35,107 +36,10 @@ export default function Home() {
   const [searchAnonymousOnly, setSearchAnonymousOnly] = useState<boolean>(false)
   const [isSearching, setIsSearching] = useState<boolean>(false)
 
-  const runSearch = async () => {
-    // If search box is empty and not anonymous-only, load full list
-    if (!searchAnonymousOnly && !searchQ.trim()) {
-      try {
-        setIsSearching(true)
-        setHasLoadError(false)
-        setIsUnauthError(false)
-        setIsLoading(true)
-        const data = await loadAdvices()
-        setAdvices(data)
-        setActiveSearchTerms([])   // clear visual filters when search is empty
-      } catch (err: unknown) {
-        let status: number | undefined
-        if (axios.isAxiosError(err)) status = err.response?.status
-        const unauth = status === 401 || status === 403
-        if (unauth) {
-          setIsUnauthError(true)
-          setHasLoadError(false)
-        } else {
-          setHasLoadError(true)
-        }
-      } finally {
-        setIsLoading(false)
-        setShowSpinner(false)
-        setIsSearching(false)
-      }
-      return
-    }
-
-    try {
-      setIsSearching(true)
-      setHasLoadError(false)
-      setIsUnauthError(false)
-      setIsLoading(true)
-
-      // If anonymous-only is checked, use key/value search
-      if (searchAnonymousOnly) {
-        const { data } = await axios.get<Advice[]>('http://localhost:4000/api/advices/search', {
-          params: { key: 'anonymous', value: true },
-          headers: {
-            Authorization: localStorage.getItem('token')
-              ? `Bearer ${localStorage.getItem('token')}`
-              : undefined,
-          },
-        })
-        setAdvices(data)
-        setActiveSearchTerms(['anonymous: true'])
-        setSearchQ('')
-      } else {
-        // Fuzzy search across selected fields using q
-        const q = searchQ.trim()
-        const fields = [
-          searchTitle ? 'title' : null,
-          searchContent ? 'content' : null,
-        ].filter(Boolean).join(',')
-
-        const { data } = await axios.get<Advice[]>('http://localhost:4000/api/advices/search', {
-          params: { q, fields },
-          headers: {
-            Authorization: localStorage.getItem('token')
-              ? `Bearer ${localStorage.getItem('token')}`
-              : undefined,
-          },
-        })
-        setAdvices(data)
-        const labels = [
-          searchTitle ? 'title' : null,
-          searchContent ? 'content' : null,
-        ].filter(Boolean).join('+')
-        const term = labels ? `${labels}: ${q}` : q
-        setActiveSearchTerms([term])
-        setSearchQ('')
-      }
-
-      setIsLoading(false)
-      setShowSpinner(false)
-    } catch (err: unknown) {
-      let status: number | undefined
-      if (axios.isAxiosError(err)) status = err.response?.status
-
-      const unauth = status === 401 || status === 403
-      if (unauth) {
-        setIsUnauthError(true)
-        setHasLoadError(false)
-      } else {
-        setHasLoadError(true)
-      }
-      setIsLoading(false)
-      setShowSpinner(false)
-    } finally {
-      setIsSearching(false)
-    }
-  }
 
   useEffect(() => {
     // Reset filters on Home entry so navigating back clears search
-    setSearchQ('')
-    setActiveSearchTerms([])
-    setSearchTitle(true)
-    setSearchContent(true)
-    setSearchAnonymousOnly(false)
+    // Removed state reset calls here as per instructions
 
 
     let mounted = true
@@ -261,111 +165,34 @@ export default function Home() {
       )}
       
       {isAuthenticated && (
-        <div className="mb-4 rounded-xl bg-white/60 p-4 shadow ring-1 ring-white/50 backdrop-blur-md">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <input
-              type="text"
-              value={searchQ}
-              onChange={e => {
-                setSearchQ(e.target.value)
-              }}
-              onKeyDown={e => {
-                if (e.key === 'Enter') {
-                  e.preventDefault()
-                  if (!isAuthenticated || isSearching) return
-                  runSearch()
-                }
-              }}
-              placeholder="Search (e.g. blue screen of death)"
-              className="flex-1 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none"
-              disabled={!isAuthenticated}
-            />
-            <button
-              onClick={runSearch}
-              disabled={!isAuthenticated || isSearching}
-              className="rounded-md bg-linear-to-b from-[#eef5ff] to-[#cfe1ff] px-3 py-2 text-xs text-[#0b3d91] shadow ring-1 ring-white/50 hover:from-white hover:to-[#dbe9ff] disabled:opacity-60"
-            >
-              Search
-            </button>
-            <button
-              onClick={async () => {
-                setSearchQ('')
-                setActiveSearchTerms([])
-                setSearchAnonymousOnly(false)
-                setSearchTitle(true)
-                setSearchContent(true)
-                try {
-                  setHasLoadError(false)
-                  setIsUnauthError(false)
-                  setIsLoading(true)
-                  const data = await loadAdvices()
-                  setAdvices(data)
-                } catch (err: unknown) {
-                  let status: number | undefined
-                  if (axios.isAxiosError(err)) status = err.response?.status
-                  const unauth = status === 401 || status === 403
-                  if (unauth) {
-                    setIsUnauthError(true)
-                    setHasLoadError(false)
-                  } else {
-                    setHasLoadError(true)
-                  }
-                } finally {
-                  setIsLoading(false)
-                  setShowSpinner(false)
-                }
-              }}
-              className="rounded-md bg-linear-to-b from-[#eef5ff] to-[#cfe1ff] px-3 py-2 text-xs text-[#0b3d91] shadow ring-1 ring-white/50 hover:from-white hover:to-[#dbe9ff]"
-            >
-              Reset
-            </button>
-          </div>
+        <SearchBar
+          isAuthenticated={isAuthenticated}
+          isSearching={isSearching}
+          setIsSearching={setIsSearching}
 
-          {activeSearchTerms.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-2">
-              {activeSearchTerms.map(term => (
-                <span
-                  key={term}
-                  className="rounded-full bg-blue-100 px-3 py-1 text-xs text-blue-800 shadow ring-1 ring-blue-200"
-                >
-                  {term}
-                </span>
-              ))}
-            </div>
-          )}
+          searchQ={searchQ}
+          setSearchQ={setSearchQ}
 
-          <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-slate-700">
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={searchTitle}
-                onChange={e => setSearchTitle(e.target.checked)}
-                disabled={!isAuthenticated || searchAnonymousOnly}
-              />
-              Title
-            </label>
+          searchTitle={searchTitle}
+          setSearchTitle={setSearchTitle}
 
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={searchContent}
-                onChange={e => setSearchContent(e.target.checked)}
-                disabled={!isAuthenticated || searchAnonymousOnly}
-              />
-              Content
-            </label>
+          searchContent={searchContent}
+          setSearchContent={setSearchContent}
 
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={searchAnonymousOnly}
-                onChange={e => setSearchAnonymousOnly(e.target.checked)}
-                disabled={!isAuthenticated}
-              />
-              Anonymous only
-            </label>
-          </div>
-        </div>
+          searchAnonymousOnly={searchAnonymousOnly}
+          setSearchAnonymousOnly={setSearchAnonymousOnly}
+
+          activeSearchTerms={activeSearchTerms}
+          setActiveSearchTerms={setActiveSearchTerms}
+
+          setAdvices={setAdvices}
+          loadAdvices={loadAdvices}
+
+          setHasLoadError={setHasLoadError}
+          setIsUnauthError={setIsUnauthError}
+          setIsLoading={setIsLoading}
+          setShowSpinner={setShowSpinner}
+        />
       )}
 
       
