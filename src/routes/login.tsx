@@ -35,10 +35,40 @@ export default function Login() {
         setMode('login')
       }
     } catch (err: unknown) {
-      if (axios.isAxiosError(err) && !err.response) {
-        setError('Cannot reach the service. Check your connection and try again.')
-      } else {
+      if (axios.isAxiosError(err)) {
+        // Network / offline
+        if (!err.response) {
+          setError('Cannot reach the service. Check your connection and try again.')
+          return
+        }
+
+        // Prefer backend-provided message(s)
+        const data = err.response.data as unknown
+        if (data && typeof data === 'object') {
+          const msg =
+            (data as { message?: string }).message ||
+            (data as { error?: string }).error
+
+          if (msg) {
+            setError(msg)
+            return
+          }
+
+          // Optional: handle structured validation errors
+          const errors = (data as { errors?: Record<string, { message?: string }> }).errors
+          if (errors) {
+            const first = Object.values(errors)[0]?.message
+            if (first) {
+              setError(first)
+              return
+            }
+          }
+        }
+
+        // Fallback for HTTP errors without a clear message
         setError('Authentication failed. Check your credentials.')
+      } else {
+        setError('Something went wrong. Please try again.')
       }
     } finally {
       setLoading(false)
