@@ -1,5 +1,6 @@
 import axios from 'axios'
 import type { Advice } from '../interfaces/interface.advice'
+import { api } from '../modules/module.interceptor'
 
 interface SearchBarProps {
   isAuthenticated: boolean
@@ -92,13 +93,8 @@ export default function SearchBar(props: SearchBarProps) {
       setIsLoading(true)
 
       if (searchAnonymousOnly) {
-        const { data } = await axios.get<Advice[]>('http://localhost:4000/api/advices/search', {
+        const { data } = await api.get<Advice[]>('/advices/search', {
           params: { key: 'anonymous', value: true },
-          headers: {
-            Authorization: localStorage.getItem('token')
-              ? `Bearer ${localStorage.getItem('token')}`
-              : undefined,
-          },
         })
 
         setAdvices(data)
@@ -106,20 +102,9 @@ export default function SearchBar(props: SearchBarProps) {
         setSearchQ('')
       } else {
         const q = searchQ.trim()
-        const fields = [
-          searchTitle ? 'title' : null,
-          searchContent ? 'content' : null,
-        ]
-          .filter(Boolean)
-          .join(',')
 
-        const { data } = await axios.get<Advice[]>('http://localhost:4000/api/advices/search', {
-          params: { q, fields },
-          headers: {
-            Authorization: localStorage.getItem('token')
-              ? `Bearer ${localStorage.getItem('token')}`
-              : undefined,
-          },
+        const { data } = await api.get<Advice[]>('/advices/search', {
+          params: { q },
         })
 
         setAdvices(data)
