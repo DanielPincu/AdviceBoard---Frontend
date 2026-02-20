@@ -156,21 +156,23 @@ export default function AdviceCard({
                         </div>
                       </div>
 
-                      {isAuthenticated && replyItem._isMine && (
+                      {isAuthenticated && (replyItem._isMine || advice._isMine) && (
                         <div className="flex gap-2">
-                          <button
-                            onClick={() => {
-                              setEditingReply({ adviceId: advice._id, replyId: replyItem._id })
-                              setReplyEdit(prev => ({ ...prev, [replyItem._id]: replyItem.content }))
-                              setReplyEditAnonymous(prev => ({
-                                ...prev,
-                                [replyItem._id]: !!replyItem.anonymous,
-                              }))
-                            }}
-                            className="rounded-md bg-linear-to-b from-[#eef5ff] to-[#cfe1ff] px-3 py-1.5 text-xs text-[#0b3d91] shadow ring-1 ring-white/50 hover:from-white hover:to-[#dbe9ff] active:translate-y-px"
-                          >
-                            Edit
-                          </button>
+                          {replyItem._isMine && (
+                            <button
+                              onClick={() => {
+                                setEditingReply({ adviceId: advice._id, replyId: replyItem._id })
+                                setReplyEdit(prev => ({ ...prev, [replyItem._id]: replyItem.content }))
+                                setReplyEditAnonymous(prev => ({
+                                  ...prev,
+                                  [replyItem._id]: !!replyItem.anonymous,
+                                }))
+                              }}
+                              className="rounded-md bg-linear-to-b from-[#eef5ff] to-[#cfe1ff] px-3 py-1.5 text-xs text-[#0b3d91] shadow ring-1 ring-white/50 hover:from-white hover:to-[#dbe9ff] active:translate-y-px"
+                            >
+                              Edit
+                            </button>
+                          )}
                           <button
                             onClick={() => onDeleteReply(advice._id, replyItem._id)}
                             className="rounded-md bg-linear-to-b from-[#eef5ff] to-[#cfe1ff] px-3 py-1.5 text-xs text-[#0b3d91] shadow ring-1 ring-white/50 hover:from-white hover:to-[#dbe9ff] active:translate-y-px"
