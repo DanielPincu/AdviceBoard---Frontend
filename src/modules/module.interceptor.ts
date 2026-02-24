@@ -1,9 +1,10 @@
 import axios from 'axios'
 
-const API_ROOT = 'https://adviceboard-backend.onrender.com/api'
+const API_ROOT = import.meta.env.VITE_API_ROOT
 
 export const api = axios.create({
   baseURL: API_ROOT,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
